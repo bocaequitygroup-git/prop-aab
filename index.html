@@ -165,15 +165,15 @@ async function mkRuns(key, dates) {   // one saveRun per planting date (1 wave e
   finally { B.gaps.groups = B.gaps.groups.filter(x => x.items.length); btns.forEach(b => b.disabled = false); render(); load(true); }
 }
 
-/* ---------- Production calendar: propagation starts, plantings and first harvests, read from the workbook via ?action=calendar ---------- */
+/* ---------- Production calendar: sowing and transplant / direct-seeding dates, read from the workbook via ?action=calendar ---------- */
 async function loadCal() {
   try { CAL = await get({action:"calendar"}); }
   catch (e) { CAL = null; $("cal").innerHTML = `<h2>Production calendar</h2><div class="note">${esc(/Unknown action/.test(e.message) ? "The server does not have the calendar yet. Deploy the latest Code_pro.gs as a new version, then press Refresh." : e.message)}</div>`; return; }
   calendar();
 }
-const CLAB = {prop: ["Propagation", "propagation start", "propagation starts"], plant: ["Planting", "planting", "plantings"], harv: ["Harvest", "first harvest", "first harvests"]};
-const calDate = (e, l) => l === "prop" ? e.sow : l === "plant" ? e.plant : e.harvest;
-const calVerb = (e, l) => l === "prop" ? "Sow " : l === "plant" ? (e.method === "DIRECT_SEED" ? "Direct sow " : "Plant ") : "Harvest ";
+const CLAB = {prop: ["Sowing", "sowing", "sowings"], plant: ["Transplant / direct seeding", "transplant or direct seeding", "transplants and direct seedings"]};
+const calDate = (e, l) => l === "prop" ? e.sow : e.plant;
+const calVerb = (e, l) => l === "prop" ? "Sow " : e.method === "DIRECT_SEED" ? "Direct seed " : e.prop ? "Transplant " : "Plant ";
 function calEvents(l) {
   if (!CAL) return [];
   return CAL.events.filter(e => (l !== "prop" || e.prop) && (!CP || e.platform === CP) && (!FILTER || e.crop === FILTER)).map(e => ({e, d: calDate(e, l)}))
@@ -181,8 +181,7 @@ function calEvents(l) {
 }
 function calDetail(e, l) {
   if (l === "prop") return `${esc(e.crop)} · Germination ${e.g}d + Nursery ${e.n}d + Harden off ${e.h}d + Establish ${e.e}d · ${e.anchored ? "established by " + fmt(e.est) : "transplant " + fmt(e.plant)}`;
-  if (l === "plant") return `${esc(e.crop)} · ${esc(e.slot)} · ${esc(e.method)}${e.bed ? " · bed " + esc(e.bed) : ""}${e.prop ? " · sow " + fmt(e.sow) : ""} · first harvest ${fmt(e.harvest)}`;
-  return `${esc(e.crop)} · ${esc(e.slot)} · planted ${fmt(e.plant)} + ${e.dth} days to first harvest`;
+  return `${esc(e.crop)} · ${esc(e.slot)} · ${esc(e.method)}${e.prop ? " · sown " + fmt(e.sow) : ""}`;
 }
 function calRow(x, l) {
   return `<div class="ag"><span class="badge">${pf(x.e.platform)}</span><span class="n"><b>${esc(calVerb(x.e, l) + x.e.name)}</b><br><span class="k">${calDetail(x.e, l)}</span></span></div>`;
@@ -208,17 +207,17 @@ function calendar() {
     body = Object.keys(by).length ? Object.keys(by).sort().map(d => `<h3>${new Date(d + "T00:00:00Z").toLocaleDateString(undefined, {weekday:"long", month:"short", day:"numeric", year:"numeric", timeZone:"UTC"})}</h3>${by[d].map(x => calRow(x, CL)).join("")}`).join("") : `<p class="k">No ${CLAB[CL][2]} in ${mlab}.</p>`;
   }
   el.innerHTML = `<div class="row noprint" style="margin-top:0"><h2 style="margin:0">Production calendar</h2><span class="sp"></span>
-    ${["prop", "plant", "harv"].map(v => btn("cl", v, CL, CLAB[v][0])).join("")}</div>
+    ${["prop", "plant"].map(v => btn("cl", v, CL, CLAB[v][0])).join("")}</div>
   <div class="row noprint">${btn("cv", "month", CV, "Month")}${btn("cv", "agenda", CV, "Agenda")}<span class="k">|</span>${btn("cp", "", CP, "All")}${btn("cp", "F", CP, "Field")}${btn("cp", "G", CP, "Greenhouse")}<span class="sp"></span>
     <button type="button" class="alt" data-ccsv="1">Download CSV</button><button type="button" class="alt" data-cprint="1">Print</button></div>
   <div class="row"><button type="button" class="alt noprint" data-cm="-1" aria-label="Previous month">‹</button><h3 style="margin:0">${mlab}</h3><span class="k">${mine.length} ${CLAB[CL][mine.length === 1 ? 1 : 2]}${mine.length ? " across " + crops + " crop" + (crops === 1 ? "" : "s") : ""}</span><button type="button" class="alt noprint" data-cm="1" aria-label="Next month">›</button><button type="button" class="alt noprint" data-cm="0">Today</button></div>
   ${body}
-  <p class="k">Read live from the workbook: every planting comes from Planting_Plan, plus any GH_Waves date it does not list. Sow date = planting date minus pre-planting days (germination + nursery + harden-off + establish) from Crop_Parameters; crops that are direct-seeded or whose DOB is the sowing date sow on the planting date. First harvest = planting date plus days to first harvest.${FILTER ? " Filtered to the crop selected under Crops and waves." : ""}</p>`;
+  <p class="k">Read live from the workbook: every planting comes from Planting_Plan, plus any GH_Waves date it does not list. Sow date = planting date minus pre-planting days (germination + nursery + harden-off + establish) from Crop_Parameters. Transplant date = the planting date; direct-seeded crops are seeded on it, and crops whose DOB is the sowing date sow on it.${FILTER ? " Filtered to the crop selected under Crops and waves." : ""}</p>`;
 }
 function calCsv() {
   const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"', rows = calEvents(CL);
-  const head = ["Date", "Layer", "Crop", "Code", "Platform", "Plan slot", "Sow date", "Planting date", "First harvest", "Days to first harvest", "Method", "Bed"];
-  const csv = [head.map(q).join(","), ...rows.map(({e, d}) => [d, CLAB[CL][0], e.name, e.crop, pf(e.platform), e.slot, e.prop ? e.sow : "", e.plant, e.harvest, e.dth, e.method, e.bed].map(q).join(","))].join("\r\n");
+  const head = ["Date", "Layer", "Crop", "Code", "Platform", "Plan slot", "Method", "Sow date", "Transplant / direct seeding date"];
+  const csv = [head.map(q).join(","), ...rows.map(({e, d}) => [d, CLAB[CL][0], e.name, e.crop, pf(e.platform), e.slot, e.method, e.prop ? e.sow : "", e.plant].map(q).join(","))].join("\r\n");
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], {type: "text/csv"})); a.download = `production-calendar-${CL}${CP ? "-" + CP : ""}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 let TRAY = null, CELLS = [], CAP = 516;
