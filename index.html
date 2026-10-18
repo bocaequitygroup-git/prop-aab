@@ -47,7 +47,8 @@ button.on{background:var(--acc);color:var(--bg);border:0}
 .cal .dn{display:inline-block;min-height:0;padding:0 6px;font-size:12px;font-weight:600;background:none;color:var(--ink);border:0;border-radius:99px}.cal .tdy .dn{background:var(--acc);color:var(--bg)}
 .cal .ev{display:block;width:100%;text-align:left;font-weight:400;font-size:11.5px;line-height:1.3;padding:2px 4px;margin-top:2px;min-height:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:0;border-left:4px solid var(--acc);background:var(--bg);color:var(--ink);border-radius:4px}
 .cal .ev.more{border-left-color:var(--line);color:var(--mute)}.cal>.sd{outline:2px solid var(--ink);outline-offset:-2px}
-.tf{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 12px;align-items:end;margin:8px 0}.tf label{display:grid;gap:2px}.tw{overflow-x:auto}.lt tr.sub td{color:var(--mute)}.lt tr.sub td:first-child{padding-left:28px}.lt tr.tot td{font-weight:700;border-top:2px solid var(--line)}.lt tr.grp td{font-weight:600}
+.tf{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 12px;align-items:end;margin:8px 0}.tf label{display:grid;gap:2px}#login{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:16px}#login .card{width:min(360px,100%);display:grid;gap:10px;margin:0}#login label{display:grid;gap:2px}
+.tw{overflow-x:auto}.lt tr.sub td{color:var(--mute)}.lt tr.sub td:first-child{padding-left:28px}.lt tr.tot td{font-weight:700;border-top:2px solid var(--line)}.lt tr.grp td{font-weight:600}
 .ag{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}.ag .n{flex:1;min-width:220px}
 @media print{header,.leg,.lay,#qp,#err,#toast,#cal .noprint{display:none!important}body{background:#fff}#cal{border:0}}
 @media(prefers-reduced-motion:no-preference){.t{transition:transform .1s}.t:not(.e):hover{transform:scale(1.25)}}
@@ -59,11 +60,16 @@ button.on{background:var(--acc);color:var(--bg);border:0}
 <button class="alt" id="cb" type="button">Production calendar</button>
 <button class="alt" id="tb" type="button">Team</button>
 <button class="alt" id="lb" type="button">Labor Hours</button>
-<label class="k">Your name <input id="user" size="12" autocomplete="name"></label>
-<label class="k">Manager PIN <input id="pin" type="password" size="7" autocomplete="off" aria-label="Manager PIN, needed to verify or override"></label>
+<span class="k" id="who"></span><button class="alt" id="logout" type="button">Log out</button>
 <button class="alt" id="refresh" type="button">Refresh</button>
 </header>
 <div class="leg"><span><i style="background:var(--mute);opacity:.6"></i>Not initiated</span><span><i style="background:var(--acc);opacity:.45"></i>Initiated</span><span><i style="background:var(--acc)"></i>In propagation</span><span><i style="background:var(--warn)"></i>Needs attention</span><span><i style="background:var(--line)"></i>Planted</span><span><i style="border:1px solid var(--line)"></i>Empty tray</span><span><i style="border:1px dashed var(--mute)"></i>Planned, no run</span></div>
+<div id="login" class="hidden" role="dialog" aria-modal="true" aria-label="Sign in"><div class="card">
+<h2>Activity Assignment Board</h2><p class="k">Ngapori Ranch · Propagation. Managers sign in with their user name and PIN.</p>
+<label class="k">User name <input id="lu" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
+<label class="k">PIN <input id="lp" type="password" inputmode="numeric" autocomplete="current-password"></label>
+<div id="lerr" class="note hidden" role="alert"></div>
+<button id="lgo" type="button">Sign in</button></div></div>
 <div id="err" class="note hidden" style="margin:0 16px 10px"></div>
 <section class="card hidden" id="qp" style="margin:0 16px 14px"></section>
 <section class="card hidden" id="team" style="margin:0 16px 14px"></section>
@@ -86,20 +92,23 @@ const days = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 864e5);
 const localToday = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
 const col = c => `hsl(${[...c].reduce((a, x) => a * 31 + x.charCodeAt(0), 7) % 360} 52% 46%)`;
 const pf = p => p === "F" ? "Field" : p === "G" ? "Greenhouse" : p;
+let TOKEN = null, ME = null;   // board session: token from boardLogin (kept in localStorage so a reload stays signed in), and who is signed in
 async function call(url, opt) {
   let t; try { t = await (await fetch(url, opt)).text(); } catch (e) { throw new Error("No connection to the server."); }
   let j; try { j = JSON.parse(t); } catch (e) { throw new Error("The server sent back a web page instead of data. Deploy the latest Code_pro.gs as a new version, then try again."); }
-  if (j.error) throw new Error(j.error); return j;
+  if (j.error) { if (/^AUTH:/.test(j.error) && TOKEN) signOut("Your session ended. Sign in again."); throw new Error(j.error.replace(/^AUTH:\s*/, "")); } return j;
 }
-async function get(p) { const u = API_URL + "?" + new URLSearchParams(p);
-  try { return await call(u); } catch (e) { if (!/web page/.test(e.message)) throw e; await new Promise(r => setTimeout(r, 1200)); return call(u); } }
-const post = b => call(API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(b)});
+const hdr = {"Content-Type":"text/plain;charset=utf-8"};
+async function get(p) {   // reads: signed in, they go out as POST so the session token never sits in a URL
+  const go = () => TOKEN ? call(API_URL, {method:"POST", headers:hdr, body:JSON.stringify({...p, token:TOKEN})}) : call(API_URL + "?" + new URLSearchParams(p));
+  try { return await go(); } catch (e) { if (!/web page/.test(e.message)) throw e; await new Promise(r => setTimeout(r, 1200)); return go(); } }
+const post = b => call(API_URL, {method:"POST", headers:hdr, body:JSON.stringify({...b, token:TOKEN})});
 
 let B = {runs: [], workers: []}, SEL = null, T = localToday(), RS = {}, FILTER = "", SQ = 1.55, PH = [], URG = false, QALL = false;
 let CAL = null, CL = "prop", CV = "month", CP = "", CM = localToday().slice(0, 7), CD = null;   // production calendar: data, layer, view, platform filter, month, selected day
 const OPENG = new Set(), DRAFT = {};   // open gap groups, and half-typed verify notes / override reasons (kept across re-renders)
 const when = s => { if (!s) return ""; const d = new Date(String(s).length <= 10 ? s + "T00:00:00" : s); return isNaN(d) ? esc(s) : d.toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"}); };
-const user = () => $("user").value.trim();
+const user = () => ME ? ME.name : "";
 function toast(m, bad) { const el = $("toast"); el.textContent = m; el.classList.remove("hidden"); el.style.background = bad ? "var(--bad)" : ""; clearTimeout(toast.t); if (m) toast.t = setTimeout(() => el.classList.add("hidden"), bad ? 6000 : 2500); else el.classList.add("hidden"); }
 const flat = () => B.runs.filter(r => !r.error).flatMap(r => r.waves.map(w => ({r, w})));
 function stat(r, w, t) {
@@ -226,14 +235,13 @@ function calCsv() {
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], {type: "text/csv"})); a.download = `production-calendar-${CL}${CP ? "-" + CP : ""}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
-/* ---------- Team: workers in USERS, add a worker, reset a PIN, total labor hours. Everything here needs the manager PIN typed in the header. ---------- */
+/* ---------- Team: workers in USERS, add a worker, reset a PIN, total labor hours. Managers only (signed in). ---------- */
 let TM = null, TNOTE = "";   // worker list + total labor hours from the server, and the one-time PIN notice
-const mgrPin = () => $("pin").value;
 function team() {
   const el = $("team"); if (el.classList.contains("hidden")) return;
   el.innerHTML = `<div class="row" style="margin-top:0"><h2 style="margin:0">Team</h2><span class="sp"></span><button type="button" class="alt" data-tload="1">Reload</button><button type="button" class="alt" data-tclose="1">Close</button></div>
   ${TNOTE ? `<div class="note">${TNOTE}</div>` : ""}
-  ${!TM ? `<p class="k">Type the manager PIN in the header, then press Reload.</p>` : `<div class="grid"><div><span class="k">Total labor hours</span><b>${(+TM.totalLaborHours || 0).toLocaleString(undefined, {maximumFractionDigits: 2})} h</b></div></div>
+  ${!TM ? `<p class="k">Press Reload to load the team.</p>` : `<div class="grid"><div><span class="k">Total labor hours</span><b>${(+TM.totalLaborHours || 0).toLocaleString(undefined, {maximumFractionDigits: 2})} h</b></div></div>
   <h3>Add worker</h3>
   <div class="tf"><label class="k">Name<input id="tn" maxlength="60" placeholder="e.g. Maria Lopez" autocomplete="off"></label>
     <label class="k">Worker ID (optional)<input id="ti" maxlength="30" placeholder="auto from name" autocomplete="off"></label>
@@ -244,13 +252,11 @@ function team() {
   ${TM.workers.map(w => `<tr><td>${esc(w.name)}</td><td>${esc(w.id)}</td><td>${esc(w.role)}</td><td>${esc(w.status)}</td><td>${w.pinSet ? "PIN set" : "No PIN"}</td><td>${String(w.role).toLowerCase() === "founder" ? `<span class="k">Founder only</span>` : `<button type="button" class="alt" data-treset="${esc(w.id)}">Reset PIN</button>`}</td></tr>`).join("")}</table></div>`}`;
 }
 async function loadTeam() {
-  if (!mgrPin()) return toast("Type the manager PIN in the header first.", true);
-  try { TM = await post({action:"team", pin:mgrPin()}); TNOTE = ""; team(); } catch (e) { toast(e.message, true); }
+  try { TM = await post({action:"team"}); TNOTE = ""; team(); } catch (e) { toast(e.message, true); }
 }
-async function teamAct(body, b) {   // add / reset: the server returns the refreshed list; the PIN box is cleared after a change, like verify and override
-  if (!mgrPin()) return toast("Type the manager PIN in the header first.", true);
+async function teamAct(body, b) {   // add / reset: the server returns the refreshed list
   b.disabled = true;
-  try { const r = await post({...body, pin:mgrPin(), user:user()}); $("pin").value = ""; TM = r.team;
+  try { const r = await post(body); TM = r.team;
     const x = r.added || r.reset, was = r.added ? "added" : "PIN reset";
     TNOTE = x.pin ? `${esc(x.name)} (${esc(x.id)}) ${was}. New PIN: <b>${esc(x.pin)}</b>. It is shown once and cannot be looked up later, so hand it over now.` : `${esc(x.name)} (${esc(x.id)}) ${was} with the PIN you set.`;
     team(); load(true); }
@@ -355,7 +361,7 @@ function prof() {
   <div><span class="k">Initiated</span><b>${w.init ? esc(w.init.by) + ", " + new Date(w.init.at).toLocaleDateString() : "Not yet"}</b></div></div>
   ${w.init ? "" : `<div class="row"><button type="button" data-init="${esc(r.runId)}|${w.wave}">Initiate this wave</button><span class="k">Adds every activity for the run so you can hand them out.</span></div>`}
   ${(w.phases || []).length ? `<h3>Propagation phases</h3><table><tr><th>Phase</th><th>Days</th><th>Starts</th><th>Ends</th></tr>${w.phases.map(p => `<tr class="${p.start <= T && T < p.end ? "cur" : ""}"><td>${esc(p.phase)}</td><td>${p.days}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td></tr>`).join("")}</table>` : ""}
-  <h3>Activities</h3><p class="k">Activities are shared by every wave of run ${esc(r.runId)}. Verify and override need your name and the manager PIN in the header.</p>${acts(rs, r)}`;
+  <h3>Activities</h3><p class="k">Activities are shared by every wave of run ${esc(r.runId)}. Verify and override are recorded under the name you signed in with.</p>${acts(rs, r)}`;
   updAssign(); if (!rs && !LOADING[r.runId]) loadRun(r.runId);
 }
 const PICK = new Set(), WPICK = new Set();
@@ -375,21 +381,17 @@ function actRow(a, run) {
   return `<div class="act"><label class="ar"><input type="checkbox" data-pick="${esc(a.id)}" ${PICK.has(a.id) ? "checked" : ""}><span class="n"><b>${esc(a.id)}</b> ${esc(a.name)}${gate ? ' <span class="badge s-exc">required gate</span>' : ""}</span><span class="k">${esc(statusOf(a))}${a.assignee ? " · " + esc(String(a.assignee).replace(/;\s*/g, ", ")) : ""}${a.locked ? " · locked until the gates are cleared" : ""}</span></label>${bits.length ? `<div class="d">${bits.join("<br>")}</div>` : ""}${ctl.join("")}</div>`;
 }
 async function actVerify(id, b) {
-  const run = SEL.runId, pin = $("pin").value, k = run + id;
-  if (!user()) return toast("Type your name at the top first. Verification records who did it.", true);
-  if (!pin) return toast("Enter the manager PIN at the top first.", true);
+  const run = SEL.runId, k = run + id;
   b.disabled = true;
-  try { RS[run] = await post({action:"verify", runId:run, activityId:id, pin, user:user(), notes:(DRAFT["n" + k] || "").trim()}); $("pin").value = ""; delete DRAFT["n" + k]; toast("Verified " + id); prof(); load(true); }
+  try { RS[run] = await post({action:"verify", runId:run, activityId:id, notes:(DRAFT["n" + k] || "").trim()}); delete DRAFT["n" + k]; toast("Verified " + id); prof(); load(true); }
   catch (e) { b.disabled = false; toast(e.message, true); }
 }
 async function actOverride(id, b) {
-  const run = SEL.runId, pin = $("pin").value, k = run + id, why = (DRAFT["w" + k] || "").trim();
-  if (!user()) return toast("Type your name at the top first. The override records who did it.", true);
+  const run = SEL.runId, k = run + id, why = (DRAFT["w" + k] || "").trim();
   if (!why) return toast("Type the reason for the override first. It is required and is recorded.", true);
-  if (!pin) return toast("Enter the manager PIN at the top first.", true);
   if (!confirm(`Override ${id} on run ${run}?\n\nThe gate will count as cleared without being completed and verified, so it stops blocking the run. Your reason is recorded. The board cannot undo an override.`)) return;
   b.disabled = true;
-  try { RS[run] = await post({action:"override", runId:run, activityId:id, pin, reason:why, user:user()}); $("pin").value = ""; delete DRAFT["w" + k]; toast("Overridden " + id); prof(); load(true); }
+  try { RS[run] = await post({action:"override", runId:run, activityId:id, reason:why}); delete DRAFT["w" + k]; toast("Overridden " + id); prof(); load(true); }
   catch (e) { b.disabled = false; toast(e.message, true); }
 }
 function acts(rs, r) {
@@ -486,9 +488,23 @@ $("qb").onclick = () => $("qp").classList.toggle("hidden");
 $("cb").onclick = () => $("cal").classList.toggle("hidden");
 $("lb").onclick = () => { const el = $("lab"); el.classList.toggle("hidden"); if (!el.classList.contains("hidden")) { if (LAB) labor(); else { el.innerHTML = `<p class="k">Loading labor hours…</p>`; loadLab(); } } };
 document.addEventListener("change", e => { if (e.target.id === "lf" || e.target.id === "lt") { LB[e.target.id === "lf" ? "from" : "to"] = e.target.value || LB[e.target.id === "lf" ? "from" : "to"]; LB.show = ""; labor(); } });
-$("tb").onclick = () => { const el = $("team"); el.classList.toggle("hidden"); if (!el.classList.contains("hidden")) { team(); if (!TM && mgrPin()) loadTeam(); else el.scrollIntoView({behavior:"smooth", block:"nearest"}); } };
+$("tb").onclick = () => { const el = $("team"); el.classList.toggle("hidden"); if (!el.classList.contains("hidden")) { team(); if (!TM) loadTeam(); else el.scrollIntoView({behavior:"smooth", block:"nearest"}); } };
 $("refresh").onclick = () => { RS = {}; CAL = null; toast("Refreshing…"); load(); };
-try { $("user").value = localStorage.getItem("board_user") || ""; } catch (e) {}
-$("user").onchange = () => { try { localStorage.setItem("board_user", $("user").value); } catch (e) {} };
-load();
+const sget = () => { try { return JSON.parse(localStorage.getItem("board_session") || "null"); } catch (e) { return null; } };
+const sput = v => { try { v ? localStorage.setItem("board_session", JSON.stringify(v)) : localStorage.removeItem("board_session"); } catch (e) {} };
+function showLogin(msg) { $("login").classList.remove("hidden"); $("lerr").textContent = msg || ""; $("lerr").classList.toggle("hidden", !msg); setTimeout(() => $(msg ? "lp" : "lu").focus(), 0); }
+function signedIn(s) { TOKEN = s.token; ME = {name: s.name, role: s.role}; $("who").textContent = s.name + " · " + s.role; $("login").classList.add("hidden"); }
+function signOut(msg) { TOKEN = null; ME = null; sput(null); try { if (msg) sessionStorage.setItem("board_msg", msg); } catch (e) {} location.reload(); }   // a reload wipes everything the last user could see
+async function doLogin() {
+  const u = $("lu").value.trim(), p = $("lp").value; if (!u || !p) return showLogin("Enter your user name and PIN.");
+  $("lgo").disabled = true;
+  try { const r = await post({action:"boardLogin", user:u, pin:p, device:navigator.userAgent}); $("lp").value = ""; const s = {token:r.token, name:r.user.name, role:r.user.role}; sput(s); signedIn(s); load(); }
+  catch (e) { $("lp").value = ""; showLogin(e.message); }
+  finally { $("lgo").disabled = false; }
+}
+$("lgo").onclick = doLogin;
+["lu", "lp"].forEach(id => $(id).addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); }));
+$("logout").onclick = async () => { try { await post({action:"logout"}); } catch (e) {} signOut(); };
+{ const s0 = sget(); let m = ""; try { m = sessionStorage.getItem("board_msg") || ""; sessionStorage.removeItem("board_msg"); } catch (e) {}
+  if (s0 && s0.token) { signedIn(s0); load(); } else showLogin(m); }
 </script></body></html>
