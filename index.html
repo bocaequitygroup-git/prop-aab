@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Activity Assignment Board - Ngapori Propagation</title>
+<style>
+:root{--bg:#edf1ec;--card:#fff;--ink:#17231c;--mute:#5d6b62;--line:#cfd8cf;--acc:#2f6f4f;--accs:#dcebe1;--warn:#a85d00;--warns:#fbeccf;--bad:#a12d2d}
+@media(prefers-color-scheme:dark){:root{--bg:#111a14;--card:#1a261e;--ink:#e6efe8;--mute:#92a398;--line:#2f4036;--acc:#6fc596;--accs:#21382b;--warn:#f0b455;--warns:#3a2c10;--bad:#f08a8a;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+header{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+h1{font-size:20px;margin:0}h2{font-size:16px;margin:0 0 8px}h3{font-size:14px;margin:14px 0 6px}.k{color:var(--mute);font-size:13px}.sp{flex:1}
+input,select,button{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-height:36px}
+button{background:var(--acc);color:var(--bg);border:0;font-weight:600;cursor:pointer}button.alt{background:var(--bg);color:var(--ink);border:1px solid var(--line)}button:disabled{opacity:.5;cursor:wait}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.conn{font-size:13px;padding:3px 10px;border-radius:99px;background:var(--accs);color:var(--acc);font-weight:600}.conn.off{background:var(--warns);color:var(--warn)}
+.leg{display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 16px;font-size:13px;color:var(--mute)}.leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.lay{display:grid;grid-template-columns:minmax(290px,380px) 1fr;gap:14px;padding:0 16px 40px;align-items:start}
+@media(max-width:900px){.lay{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.note{background:var(--warns);color:var(--warn);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:14px}.hidden{display:none!important}
+.run{border-top:1px solid var(--line);padding:10px 0}.run:first-of-type{border-top:0}.run b{font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.chip{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-left-width:5px;text-align:left;font-weight:400;font-size:13px;line-height:1.3;padding:5px 9px}
+.chip.sel{outline:2px solid var(--ink)}
+.s-prop{border-left-color:var(--mute)!important;border-style:dashed}.s-init{border-left-color:var(--acc)!important}.s-occ{border-left-color:var(--acc)!important;background:var(--accs)}.s-exc{border-left-color:var(--warn)!important;background:var(--warns)}.s-done{border-left-color:var(--line)!important;opacity:.7}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-weight:600;font-size:12px;background:var(--bg);border:1px solid var(--line)}
+.badge.s-occ,.badge.s-init{background:var(--accs);color:var(--acc);border-color:var(--accs)}.badge.s-exc{background:var(--warns);color:var(--warn);border-color:var(--warns)}
+.trays{display:grid;grid-template-columns:repeat(auto-fill,minmax(17px,1fr));gap:3px;margin:10px 0}
+.t{aspect-ratio:1;border-radius:3px;border:1px solid transparent;padding:0;min-height:0;cursor:pointer}
+.t.e{background:var(--bg);border-color:var(--line);cursor:default}
+.t.prop{background-image:repeating-linear-gradient(45deg,transparent 0 3px,rgba(255,255,255,.6) 3px 5px)}
+.t.exc{border-color:var(--warn);box-shadow:0 0 0 2px var(--warn)}.t.sel{outline:2px solid var(--ink);outline-offset:1px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}.grid div{border:1px solid var(--line);border-radius:8px;padding:8px 10px}.grid b{display:block}
+table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--mute);font-size:13px}tr.cur td{background:var(--accs);font-weight:600}
+.ar{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:5px 0;border-bottom:1px dashed var(--line);font-size:14px}.ar .n{flex:1;min-width:180px}
+details{margin:6px 0;border:1px solid var(--line);border-radius:8px;padding:6px 10px}summary{cursor:pointer;font-weight:600}.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.q{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}.q .n{flex:1;min-width:200px}
+.pri{font-weight:700;font-size:12px;padding:2px 8px;border-radius:5px}.pri.must{background:var(--bad);color:var(--bg)}.pri.att{background:var(--warns);color:var(--warn)}.pri.rtn{background:var(--accs);color:var(--acc)}
+#toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;z-index:9;max-width:90vw}
+@media(prefers-reduced-motion:no-preference){.t{transition:transform .1s}.t:not(.e):hover{transform:scale(1.25)}}
+</style></head><body>
+<header>
+<h1>Activity Assignment Board</h1><span class="k">Ngapori Ranch · Propagation</span>
+<span class="conn off" id="conn">Connecting…</span><span class="sp"></span>
+<button class="alt" id="qb" type="button">Assignment queue (0)</button>
+<label class="k">Your name <input id="user" size="12" autocomplete="name"></label>
+<button class="alt" id="refresh" type="button">Refresh</button>
+</header>
+<div class="leg"><span><i style="background:var(--mute);opacity:.6"></i>Not initiated</span><span><i style="background:var(--acc);opacity:.45"></i>Initiated</span><span><i style="background:var(--acc)"></i>In propagation</span><span><i style="background:var(--warn)"></i>Needs attention</span><span><i style="background:var(--line)"></i>Planted</span><span><i style="border:1px solid var(--line)"></i>Empty tray</span></div>
+<div id="err" class="note hidden" style="margin:0 16px 10px"></div>
+<section class="card hidden" id="qp" style="margin:0 16px 14px"></section>
+<div class="lay">
+<section class="card" id="crops"><p class="k">Loading crops and waves…</p></section>
+<div>
+<section class="card" id="room"></section>
+<section class="card" id="prof"></section>
+</div></div>
+<div id="toast" class="hidden"></div>
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbz7qyhFT5BRUpiqLCnjtT8gRX-UQ-I0lQhF__H6dgCU_Rql2WFOMuNm-YLXazi0Zrir_g/exec"; // Apps Script web app URL (ends in /exec)
+const $ = id => document.getElementById(id), esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = s => s ? new Date(s + "T00:00:00").toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"}) : "";
+const add = (iso, n) => new Date(Date.parse(iso) + n * 864e5).toISOString().slice(0, 10);
+const days = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 864e5);
+const localToday = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
+const col = c => `hsl(${[...c].reduce((a, x) => a * 31 + x.charCodeAt(0), 7) % 360} 52% 46%)`;
+const pf = p => p === "F" ? "Field" : p === "G" ? "Greenhouse" : p;
+async function call(url, opt) {
+  let t; try { t = await (await fetch(url, opt)).text(); } catch (e) { throw new Error("No connection to the server."); }
+  let j; try { j = JSON.parse(t); } catch (e) { throw new Error("The server sent back a web page instead of data. Deploy the latest Code_pro.gs as a new version, then try again."); }
+  if (j.error) throw new Error(j.error); return j;
+}
+async function get(p) { const u = API_URL + "?" + new URLSearchParams(p);
+  try { return await call(u); } catch (e) { if (!/web page/.test(e.message)) throw e; await new Promise(r => setTimeout(r, 1200)); return call(u); } }
+const post = b => call(API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(b)});
+
+let B = {runs: [], workers: []}, SEL = null, T = localToday(), RS = {}, FILTER = "", SQ = 1.55, PH = [];
+const user = () => $("user").value.trim();
+function toast(m, bad) { const el = $("toast"); el.textContent = m; el.classList.remove("hidden"); el.style.background = bad ? "var(--bad)" : ""; clearTimeout(toast.t); if (m) toast.t = setTimeout(() => el.classList.add("hidden"), bad ? 6000 : 2500); else el.classList.add("hidden"); }
+const flat = () => B.runs.filter(r => !r.error && (!FILTER || r.crop === FILTER)).flatMap(r => r.waves.map(w => ({r, w})));
+function stat(r, w, t) {
+  if (t >= w.plant) return ["done", "Planted"];
+  const gatesOpen = r.acts.gates > 0 && r.acts.gatesOk < r.acts.gates;
+  if (!w.init) return t >= w.sow ? ["exc", "Overdue: not initiated"] : ["prop", `Not initiated · sow in ${days(t, w.sow)} d`];
+  if (t < w.sow) return ["init", `Initiated · sow in ${days(t, w.sow)} d`];
+  if (gatesOpen) return ["exc", "Gate activities unverified"];
+  const ph = (w.phases || []).find(p => p.start <= t && t < p.end);
+  return ["occ", r.direct ? "Direct-seeded, growing" : "In propagation" + (ph ? " · " + ph.phase : "")];
+}
+async function load(quiet) {
+  try { B = await get({action:"board"}); $("conn").textContent = "Connected · " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}); $("conn").className = "conn"; $("err").classList.add("hidden"); render(); }
+  catch (e) { $("conn").textContent = "Offline"; $("conn").className = "conn off"; $("err").textContent = e.message; $("err").classList.remove("hidden"); if (!quiet) toast(e.message, true); }
+}
+function render() { crops(); room(); prof(); queue(); }
+function crops() {
+  const codes = [...new Map(B.runs.map(r => [r.crop, r.cropName])).entries()];
+  const runs = B.runs.filter(r => !FILTER || r.crop === FILTER);
+  $("crops").innerHTML = `<h2>Crops and waves</h2><label class="k">Crop <select id="cf"><option value="">All crops</option>${codes.map(([c, n]) => `<option value="${esc(c)}" ${c === FILTER ? "selected" : ""}>${esc(n)} (${esc(c)})</option>`).join("")}</select></label>
+  ${runs.length ? runs.map(r => r.error ? `<div class="run"><b>${esc(r.cropName)}</b><div class="note">Run ${esc(r.runId)} could not be read: ${esc(r.error)}</div></div>` : `<div class="run"><div class="row" style="margin:0"><b>${esc(r.cropName)} (${esc(r.crop)})</b><span class="k">${pf(r.platform)} · ${esc(r.runId)}${r.runType === "ADDITIONAL" ? " · unplanned" : ""}</span></div>
+    <div class="k">${esc(r.location)} · activities ${r.acts.assigned}/${r.acts.total} assigned</div>
+    <div class="chips">${r.waves.map(w => { const [k, l] = stat(r, w, T); return `<button type="button" class="chip s-${k} ${SEL && SEL.runId === r.runId && SEL.wave === w.wave ? "sel" : ""}" data-sel="${esc(r.runId)}|${w.wave}" title="${esc(l)}"><b>Wave ${w.wave}</b><br>${fmt(w.sow)} to ${fmt(w.plant)}</button>`; }).join("")}</div>
+    ${r.waves.some(w => !w.init) ? `<button type="button" data-init="${esc(r.runId)}|all">Initiate all waves</button>` : `<span class="badge s-init">All waves initiated</span>`}</div>`).join("") : `<p class="k">No runs yet. Create one in the Propagation Engine and it will appear here.</p>`}`;
+  $("cf").onchange = e => { FILTER = e.target.value; render(); };
+}
+function room() {
+  const cap = Math.floor(800 / SQ), on = flat().filter(x => x.w.trays > 0 && x.w.sow <= T && T < x.w.plant).sort((a, b) => a.w.sow < b.w.sow ? -1 : a.w.sow > b.w.sow ? 1 : 0);
+  const cells = []; on.forEach(({r, w}) => { const [k] = stat(r, w, T); for (let i = 0; i < w.trays; i++) cells.push({r, w, k}); });
+  const used = Math.min(cap, cells.length), over = cells.length - cap, by = {}; on.forEach(({r, w}) => by[r.crop] = (by[r.crop] || 0) + w.trays);
+  $("room").innerHTML = `<h2>Propagation room · Bay 3</h2>
+  <div class="row"><button class="alt" type="button" data-day="-1">Previous day</button><input type="date" id="day" value="${T}"><button class="alt" type="button" data-day="1">Next day</button><button class="alt" type="button" data-day="0">Today</button>
+  <label class="k">Sq ft per tray <input type="number" id="sq" min="0.5" step="0.05" value="${SQ}" style="width:80px"></label></div>
+  <p><b>${used}</b> of ${cap} trays occupied on ${fmt(T)} (${Math.round(used / cap * 100)}%) · ${cap - used} empty${over > 0 ? ` · <b style="color:var(--bad)">${over} trays over capacity</b>` : ""}</p>
+  <div class="trays">${cells.slice(0, cap).map(c => `<button type="button" class="t ${c.k === "prop" ? "prop" : ""} ${c.k === "exc" ? "exc" : ""} ${SEL && SEL.runId === c.r.runId && SEL.wave === c.w.wave ? "sel" : ""}" style="background-color:${col(c.r.crop)}" data-sel="${esc(c.r.runId)}|${c.w.wave}" title="${esc(c.r.cropName)} wave ${c.w.wave}" aria-label="${esc(c.r.cropName)} wave ${c.w.wave}"></button>`).join("")}${Array(Math.max(0, cap - cells.length)).fill('<div class="t e"></div>').join("")}</div>
+  <div class="k">${Object.entries(by).map(([c, n]) => `<span style="margin-right:14px"><i style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${col(c)};margin-right:5px"></i>${esc(c)} ${n} trays</span>`).join("") || "No trays in the room on this day."}</div>`;
+  $("day").onchange = e => { T = e.target.value || T; render(); };
+  $("sq").onchange = e => { SQ = Math.max(0.5, +e.target.value || 1.55); room(); };
+}
+const statusOf = a => a.overridden ? "Overridden" : a.verified ? "Verified" : a.completed ? "Done, awaiting verification" : a.sessions && a.sessions.length ? "In progress" : a.assignee ? "Assigned" : "Not assigned";
+function prof() {
+  const el = $("prof"), r = SEL && B.runs.find(x => x.runId === SEL.runId), w = r && r.waves && r.waves.find(x => x.wave === SEL.wave);
+  if (!w) { el.innerHTML = `<h2>Wave profile</h2><p class="k">Select a wave from the list, or a tray on the map, to see its profile and hand out activities.</p>`; return; }
+  const [k, l] = stat(r, w, T), rs = RS[r.runId];
+  el.innerHTML = `<div class="row" style="margin-top:0"><h2 style="margin:0">${esc(r.cropName)} · wave ${w.wave} of ${r.waves.length}</h2><span class="badge s-${k}">${esc(l)}</span></div>
+  <div class="grid"><div><span class="k">Sow date</span><b>${fmt(w.sow)}</b></div><div><span class="k">Planting date (DOB)</span><b>${fmt(w.plant)}</b></div>
+  <div><span class="k">Trays</span><b>${w.trays || "None (direct-seeded)"}</b></div><div><span class="k">Material</span><b>${w.material ? w.material.toLocaleString() : "Bulk"}</b></div>
+  <div><span class="k">Planting location</span><b>${esc(r.location)}</b></div><div><span class="k">Bed assignment</span><b>${esc(r.bed || "n/a")}</b></div>
+  <div><span class="k">Propagation location</span><b>${esc(r.propLocation || "None, bypasses nursery")}</b></div><div><span class="k">Tray type</span><b>${r.trayCells ? r.trayCells + "-cell plug tray" : "None"}</b></div>
+  <div><span class="k">Platform · days before DOB</span><b>${pf(r.platform)} · ${r.preDobDays}</b></div><div><span class="k">Run</span><b>${esc(r.runId)}${r.runType === "ADDITIONAL" ? " (unplanned)" : ""}</b></div>
+  <div><span class="k">Gate activities verified</span><b>${r.acts.gates ? r.acts.gatesOk + " of " + r.acts.gates : "None required"}</b></div>
+  <div><span class="k">Initiated</span><b>${w.init ? esc(w.init.by) + ", " + new Date(w.init.at).toLocaleDateString() : "Not yet"}</b></div></div>
+  ${w.init ? "" : `<div class="row"><button type="button" data-init="${esc(r.runId)}|${w.wave}">Initiate this wave</button><span class="k">Adds every activity for the run so you can hand them out.</span></div>`}
+  ${(w.phases || []).length ? `<h3>Propagation phases</h3><table><tr><th>Phase</th><th>Days</th><th>Starts</th><th>Ends</th></tr>${w.phases.map(p => `<tr class="${p.start <= T && T < p.end ? "cur" : ""}"><td>${esc(p.phase)}</td><td>${p.days}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td></tr>`).join("")}</table>` : ""}
+  <h3>Activities</h3><p class="k">Activities are shared by every wave of run ${esc(r.runId)}.</p>${acts(rs, r)}`;
+  if (!rs && !LOADING[r.runId]) loadRun(r.runId);
+}
+function acts(rs, r) {
+  if (!rs) return `<p class="k">Loading activities…</p>`;
+  if (!rs.activities.length) return `<p class="k">No activities yet. Initiate a wave to add them.</p>`;
+  const by = {}; rs.activities.forEach(a => (by[a.phase || "Required gate activities"] = by[a.phase || "Required gate activities"] || []).push(a));
+  PH = Object.entries(by);
+  return PH.map(([ph, l], i) => { const un = l.filter(a => !a.assignee);
+    return `<details ${un.length ? "open" : ""}><summary>${esc(ph)} · ${l.length - un.length} of ${l.length} assigned</summary>${l.map(a => `<div class="ar"><span class="n"><b>${esc(a.id)}</b> ${esc(a.name)}${a.scope !== "crop-wave" ? ' <span class="badge s-exc">required gate</span>' : ""}</span><span class="k">${esc(statusOf(a))}${a.assignee ? " · " + esc(String(a.assignee).replace(/;\s*/g, ", ")) : ""}</span></div>`).join("")}
+    ${un.length && B.workers.length ? `<div class="row"><select data-pw="${i}" aria-label="Worker">${B.workers.map(x => `<option value="${esc(x.id)}">${esc(x.name)} (${esc(x.role)})</option>`).join("")}</select><button type="button" data-pa="${i}">Assign ${un.length} unassigned</button></div>` : ""}</details>`; }).join("");
+}
+const LOADING = {}, QI = [];
+async function loadRun(id) { LOADING[id] = 1; try { RS[id] = await get({action:"run", runId:id}); } catch (e) { RS[id] = {activities: []}; toast(e.message, true); } delete LOADING[id]; prof(); }
+function queue() {
+  const items = flat().map(({r, w}) => { const d = days(T, w.sow), [k] = stat(r, w, T);
+    if (T >= w.plant) return null;
+    if (!w.init && d <= 14) return {r, w, d, why: d < 0 ? "Sow date passed, wave not initiated" : "Not initiated, sow in " + d + " d", p: d <= 3 ? "must" : d <= 7 ? "att" : "rtn", init: true};
+    if (k === "exc") return {r, w, d, why: "Gate activities need completing and verifying", p: "att"};
+    return null; }).filter(Boolean).sort((a, b) => a.d - b.d);
+  $("qb").textContent = `Assignment queue (${items.length})`; QI.length = 0; items.filter(i => i.init).forEach(i => QI.push(i));
+  const lab = {must: "Must do", att: "Attention", rtn: "Routine"}, todo = [...new Set(items.filter(i => i.init).map(i => i.r.runId))];
+  $("qp").innerHTML = `<div class="row" style="margin-top:0"><h2 style="margin:0">Assignment queue</h2>${todo.length ? `<button type="button" data-initq="1">Initiate all listed waves</button>` : ""}</div>
+  ${items.length ? items.map(i => `<div class="q"><span class="pri ${i.p}">${lab[i.p]}</span><span class="n"><b>${esc(i.r.cropName)} wave ${i.w.wave}</b> <span class="k">${esc(i.why)} · sow ${fmt(i.w.sow)}</span></span><button type="button" class="alt" data-sel="${esc(i.r.runId)}|${i.w.wave}">Open</button>${i.init ? `<button type="button" data-init="${esc(i.r.runId)}|${i.w.wave}">Initiate</button>` : ""}</div>`).join("") : `<p class="k">Nothing waiting. Waves due to sow in the next 14 days are all initiated.</p>`}`;
+}
+async function initWaves(runId, waves) {
+  const set = waves === "all" ? null : [].concat(waves).map(Number), btns = document.querySelectorAll("button"); btns.forEach(b => b.disabled = true); toast("Initiating… this can take 10 to 20 seconds");
+  try { await post({action:"initWaves", runId, waves, user:user()});
+    const r = B.runs.find(x => x.runId === runId); r.waves.forEach(w => { if ((!set || set.includes(w.wave)) && !w.init) w.init = {at: new Date().toISOString(), by: user() || "manager"}; });
+    delete RS[runId]; toast("Initiated"); render(); load(true);
+  } catch (e) { toast(e.message, true); } finally { btns.forEach(b => b.disabled = false); }
+}
+document.addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b) return; const d = b.dataset;
+  if (d.sel) { const [id, w] = d.sel.split("|"); SEL = {runId: id, wave: +w}; render(); $("prof").scrollIntoView({behavior:"smooth", block:"nearest"}); }
+  else if (d.init) { const [id, w] = d.init.split("|"); initWaves(id, w === "all" ? "all" : +w); }
+  else if (d.initq) { const by = {}; QI.forEach(i => (by[i.r.runId] = by[i.r.runId] || []).push(i.w.wave)); for (const [id, ws] of Object.entries(by)) await initWaves(id, ws); }
+  else if (d.day !== undefined) { T = d.day === "0" ? localToday() : add(T, +d.day); render(); }
+  else if (d.pa !== undefined) {
+    const [, l] = PH[+d.pa], sel = document.querySelector(`[data-pw="${d.pa}"]`), id = SEL.runId; b.disabled = true; toast("Assigning…");
+    try { RS[id] = await post({action:"assign", runId:id, activityIds:l.filter(a => !a.assignee).map(a => a.id), workerIds:[sel.value], user:user()}); toast("Assigned"); prof(); load(true); }
+    catch (x) { toast(x.message, true); b.disabled = false; }
+  }
+});
+$("qb").onclick = () => $("qp").classList.toggle("hidden");
+$("refresh").onclick = () => { RS = {}; toast("Refreshing…"); load(); };
+try { $("user").value = localStorage.getItem("board_user") || ""; } catch (e) {}
+$("user").onchange = () => { try { localStorage.setItem("board_user", $("user").value); } catch (e) {} };
+load();
+</script></body></html>
