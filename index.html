@@ -37,20 +37,36 @@ details{margin:6px 0;border:1px solid var(--line);border-radius:8px;padding:6px 
 .q{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}.q .n{flex:1;min-width:200px}
 .pri{font-weight:700;font-size:12px;padding:2px 8px;border-radius:5px}.pri.must{background:var(--bad);color:var(--bg)}.pri.att{background:var(--warns);color:var(--warn)}.pri.rtn{background:var(--accs);color:var(--acc)}
 #toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;z-index:9;max-width:90vw}
+.badge.s-gap{background:var(--bg);color:var(--mute);border:1px dashed var(--mute)}
+.chk{display:flex;gap:8px;align-items:center}.chk input{min-height:0;width:18px;height:18px}
+.act{border-bottom:1px dashed var(--line);padding:4px 0}.act>label.ar{border-bottom:0;padding-bottom:0}.act .d{font-size:13px;color:var(--mute);margin:0 0 4px 28px}.act .row,.act details{margin:4px 0 4px 28px}.act input[type=text]{flex:1;min-width:170px}
+.gl .q:last-child{border-bottom:0}
+button.on{background:var(--acc);color:var(--bg);border:0}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.cal>div{background:var(--card);min-height:88px;padding:3px 4px;font-size:12px;min-width:0}.cal>.h{min-height:0;color:var(--mute);font-weight:600;text-align:center;padding:5px 0}.cal>.o{background:var(--bg)}.cal>.o .dn{opacity:.5}
+.cal .dn{display:inline-block;min-height:0;padding:0 6px;font-size:12px;font-weight:600;background:none;color:var(--ink);border:0;border-radius:99px}.cal .tdy .dn{background:var(--acc);color:var(--bg)}
+.cal .ev{display:block;width:100%;text-align:left;font-weight:400;font-size:11.5px;line-height:1.3;padding:2px 4px;margin-top:2px;min-height:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:0;border-left:4px solid var(--acc);background:var(--bg);color:var(--ink);border-radius:4px}
+.cal .ev.more{border-left-color:var(--line);color:var(--mute)}.cal>.sd{outline:2px solid var(--ink);outline-offset:-2px}
+.ag{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}.ag .n{flex:1;min-width:220px}
+@media print{header,.leg,.lay,#qp,#err,#toast,#cal .noprint{display:none!important}body{background:#fff}#cal{border:0}}
 @media(prefers-reduced-motion:no-preference){.t{transition:transform .1s}.t:not(.e):hover{transform:scale(1.25)}}
 </style></head><body>
 <header>
 <h1>Activity Assignment Board</h1><span class="k">Ngapori Ranch · Propagation</span>
 <span class="conn off" id="conn">Connecting…</span><span class="sp"></span>
 <button class="alt" id="qb" type="button">Assignment queue (0)</button>
+<button class="alt" id="cb" type="button">Production calendar</button>
 <label class="k">Your name <input id="user" size="12" autocomplete="name"></label>
+<label class="k">Manager PIN <input id="pin" type="password" size="7" autocomplete="off" aria-label="Manager PIN, needed to verify or override"></label>
 <button class="alt" id="refresh" type="button">Refresh</button>
 </header>
-<div class="leg"><span><i style="background:var(--mute);opacity:.6"></i>Not initiated</span><span><i style="background:var(--acc);opacity:.45"></i>Initiated</span><span><i style="background:var(--acc)"></i>In propagation</span><span><i style="background:var(--warn)"></i>Needs attention</span><span><i style="background:var(--line)"></i>Planted</span><span><i style="border:1px solid var(--line)"></i>Empty tray</span></div>
+<div class="leg"><span><i style="background:var(--mute);opacity:.6"></i>Not initiated</span><span><i style="background:var(--acc);opacity:.45"></i>Initiated</span><span><i style="background:var(--acc)"></i>In propagation</span><span><i style="background:var(--warn)"></i>Needs attention</span><span><i style="background:var(--line)"></i>Planted</span><span><i style="border:1px solid var(--line)"></i>Empty tray</span><span><i style="border:1px dashed var(--mute)"></i>Planned, no run</span></div>
 <div id="err" class="note hidden" style="margin:0 16px 10px"></div>
 <section class="card hidden" id="qp" style="margin:0 16px 14px"></section>
+<section class="card" id="cal" style="margin:0 16px 14px"><p class="k">Loading the production calendar…</p></section>
 <div class="lay">
-<section class="card" id="crops"><p class="k">Loading crops and waves…</p></section>
+<div><section class="card" id="crops"><p class="k">Loading crops and waves…</p></section>
+<section class="card hidden" id="gaps"></section></div>
 <div>
 <section class="card" id="room"></section>
 <section class="card" id="prof"></section>
@@ -74,7 +90,10 @@ async function get(p) { const u = API_URL + "?" + new URLSearchParams(p);
   try { return await call(u); } catch (e) { if (!/web page/.test(e.message)) throw e; await new Promise(r => setTimeout(r, 1200)); return call(u); } }
 const post = b => call(API_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(b)});
 
-let B = {runs: [], workers: []}, SEL = null, T = localToday(), RS = {}, FILTER = "", SQ = 1.55, PH = [];
+let B = {runs: [], workers: []}, SEL = null, T = localToday(), RS = {}, FILTER = "", SQ = 1.55, PH = [], URG = false, QALL = false;
+let CAL = null, CL = "prop", CV = "month", CP = "", CM = localToday().slice(0, 7), CD = null;   // production calendar: data, layer, view, platform filter, month, selected day
+const OPENG = new Set(), DRAFT = {};   // open gap groups, and half-typed verify notes / override reasons (kept across re-renders)
+const when = s => { if (!s) return ""; const d = new Date(String(s).length <= 10 ? s + "T00:00:00" : s); return isNaN(d) ? esc(s) : d.toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"}); };
 const user = () => $("user").value.trim();
 function toast(m, bad) { const el = $("toast"); el.textContent = m; el.classList.remove("hidden"); el.style.background = bad ? "var(--bad)" : ""; clearTimeout(toast.t); if (m) toast.t = setTimeout(() => el.classList.add("hidden"), bad ? 6000 : 2500); else el.classList.add("hidden"); }
 const flat = () => B.runs.filter(r => !r.error).flatMap(r => r.waves.map(w => ({r, w})));
@@ -88,19 +107,119 @@ function stat(r, w, t) {
   return ["occ", r.direct ? "Direct-seeded, growing" : "In propagation" + (ph ? " · " + ph.phase : "")];
 }
 async function load(quiet) {
-  try { B = await get({action:"board"}); $("conn").textContent = "Connected · " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}); $("conn").className = "conn"; $("err").classList.add("hidden"); render(); }
+  try { B = await get({action:"board"}); $("conn").textContent = "Connected · " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}); $("conn").className = "conn"; $("err").classList.add("hidden"); render(); if (!CAL) loadCal(); }
   catch (e) { $("conn").textContent = "Offline"; $("conn").className = "conn off"; $("err").textContent = e.message; $("err").classList.remove("hidden"); if (!quiet) toast(e.message, true); }
 }
-function render() { crops(); room(); prof(); queue(); }
+function render() { crops(); gaps(); room(); prof(); queue(); calendar(); }
 function crops() {
-  const codes = [...new Map(B.runs.map(r => [r.crop, r.cropName])).entries()];
+  const G = B.gaps ? B.gaps.groups : [], codes = [...new Map([...B.runs.map(r => [r.crop, r.cropName]), ...G.map(g => [g.crop, g.cropName])]).entries()].sort((a, b) => String(a[1]).localeCompare(String(b[1])));
   const runs = B.runs.filter(r => !FILTER || r.crop === FILTER);
   $("crops").innerHTML = `<h2>Crops and waves</h2><label class="k">Crop <select id="cf"><option value="">All crops</option>${codes.map(([c, n]) => `<option value="${esc(c)}" ${c === FILTER ? "selected" : ""}>${esc(n)} (${esc(c)})</option>`).join("")}</select></label>
   ${runs.length ? runs.map(r => r.error ? `<div class="run"><b>${esc(r.cropName)}</b><div class="note">Run ${esc(r.runId)} could not be read: ${esc(r.error)}</div></div>` : `<div class="run"><div class="row" style="margin:0"><b>${esc(r.cropName)} (${esc(r.crop)})</b><span class="k">${pf(r.platform)} · ${esc(r.runId)}${r.runType === "ADDITIONAL" ? " · unplanned" : ""}</span></div>
-    <div class="k">${esc(r.location)} · activities ${r.acts.assigned}/${r.acts.total} assigned</div>
+    <div class="k">${esc(r.location)} · activities ${r.acts.assigned}/${r.acts.total} assigned${r.acts.awaiting ? ` · <b>${r.acts.awaiting} awaiting verification</b>` : ""}</div>
     <div class="chips">${r.waves.map(w => { const [k, l] = stat(r, w, T); return `<button type="button" class="chip s-${k} ${SEL && SEL.runId === r.runId && SEL.wave === w.wave ? "sel" : ""}" data-sel="${esc(r.runId)}|${w.wave}" title="${esc(l)}"><b>Wave ${w.wave}</b><br>${fmt(w.sow)} to ${fmt(w.plant)}</button>`; }).join("")}</div>
-    ${r.waves.some(w => !w.init) ? `<button type="button" data-init="${esc(r.runId)}|all">Initiate all waves</button>` : `<span class="badge s-init">All waves initiated</span>`}</div>`).join("") : `<p class="k">No runs yet. Create one in the Propagation Engine and it will appear here.</p>`}`;
+    ${r.waves.some(w => !w.init) ? `<button type="button" data-init="${esc(r.runId)}|all">Initiate all waves</button>` : `<span class="badge s-init">All waves initiated</span>`}</div>`).join("") : `<p class="k">${FILTER ? "No runs for this crop yet. Its planned dates are listed under Planned, no run." : "No runs yet. Create one from Planned, no run below, or in the Propagation Engine."}</p>`}`;
   $("cf").onchange = e => { FILTER = e.target.value; render(); };
+}
+const grp = key => B.gaps && B.gaps.groups.find(g => g.crop + "|" + g.platform === key);
+const gapSow = (g, d) => add(d, -g.lead), gapLive = i => T < i.date;   // a gap whose planting date has passed is listed but never raises a queue item
+function gapList(g) { return g.items.map(i => ({...i, sow: gapSow(g, i.date)})).filter(i => !URG || (gapLive(i) && days(T, i.sow) <= 30)); }
+function gapRow(g, i, key) {
+  const d = days(T, i.sow), live = gapLive(i), why = !live ? "Plant date passed" : d < 0 ? `Sow date passed ${-d} d ago` : d === 0 ? "Sow today" : `Sow in ${d} d`,
+    nr = i.near ? ` · run ${esc(i.near.runId)} already has a wave ${Math.abs(i.near.days)} d ${i.near.days < 0 ? "before" : "after"} this (${fmt(i.near.date)})` : "";
+  return `<div class="q"><span class="badge ${live && d <= 0 ? "s-exc" : "s-gap"}">Planned, no run</span><span class="n"><b>Plant ${fmt(i.date)}</b> <span class="k">${esc(i.slot)} · sow ${fmt(i.sow)} · ${why}${nr}</span></span>${g.error ? "" : `<button type="button" data-mk="${esc(key)}|${i.date}">Create run</button>`}</div>`;
+}
+function gaps() {
+  const el = $("gaps"); el.classList.remove("hidden");
+  if (!B.gaps) { el.innerHTML = `<h2>Planned, no run</h2><div class="note">The server did not send the season plan. Deploy the latest Code_pro.gs as a new version, then press Refresh.</div>`; return; }
+  const gs = B.gaps.groups.filter(g => !FILTER || g.crop === FILTER).map(g => ({g, l: gapList(g)})).filter(x => x.l.length),
+    total = gs.reduce((n, x) => n + x.l.length, 0), live = gs.reduce((n, x) => n + x.l.filter(gapLive).length, 0);
+  el.innerHTML = `<h2>Planned, no run</h2>
+  <p class="k">Planting dates in Planting_Plan and GH_Waves that no saved run lands on (matched by exact planting date): ${B.gaps.planned - B.gaps.covered} of ${B.gaps.planned} planned dates this season. Create a run from any of them.</p>
+  <label class="k chk"><input type="checkbox" id="urg" ${URG ? "checked" : ""}> Only sow dates within 30 days of ${fmt(T)}, or already passed</label>
+  <p><b>${total}</b> shown${FILTER ? " for this crop" : ""}${total > live ? `, ${total - live} with a planting date that has already passed` : ""}.</p>
+  ${gs.length ? gs.map(({g, l}) => { const key = g.crop + "|" + g.platform, nl = l.filter(gapLive), past = l.length - nl.length,
+    facts = [g.location, g.bed && "bed " + g.bed, g.error ? "" : g.direct ? "direct-seeded, no trays" : (g.trays || 0) + " trays per wave" + (g.trayCells ? ", " + g.trayCells + "-cell" : ""), g.window && "Oregon window " + g.window].filter(Boolean).map(esc).join(" · ");
+    return `<details class="gl" data-g="${esc(key)}" ${FILTER || OPENG.has(key) ? "open" : ""}><summary>${esc(g.cropName)} (${esc(g.crop)}) · ${pf(g.platform)} · ${l.length} planned, no run${past ? ` (${past} past)` : ""}${nl.length ? " · next plant " + fmt(nl[0].date) : ""}</summary>
+    ${facts ? `<div class="k">${facts}</div>` : ""}
+    ${g.error ? `<div class="note">${esc(g.error)}. Runs cannot be created for this crop until that is fixed.</div>` : ""}${(g.notes || []).map(n => `<div class="note">${esc(n)}</div>`).join("")}
+    ${!g.error && nl.length > 1 ? `<div class="row"><button type="button" class="alt" data-mkall="${esc(key)}">Create ${nl.length} runs, one per planting date</button></div>` : ""}
+    ${l.map(i => gapRow(g, i, key)).join("")}</details>`; }).join("") : `<p class="k">${URG ? "Nothing is due to sow soon without a run." : FILTER ? "Every planned date for this crop has a run." : "Every planned date has a run."}</p>`}`;
+}
+function noRunNote() {   // trays that are planned for the room on day T but have no run yet (not counted in the occupancy figure)
+  if (!B.gaps) return "";
+  const hit = B.gaps.groups.filter(g => !g.error && g.trays > 0).map(g => ({g, n: g.items.filter(i => gapSow(g, i.date) <= T && T < i.date).length})).filter(x => x.n), trays = hit.reduce((n, x) => n + x.n * x.g.trays, 0);
+  return trays ? `<p class="k"><span class="badge s-gap">Planned, no run</span> ${trays} more trays are planned for the room on this day (${hit.map(x => esc(x.g.cropName) + (x.n > 1 ? " ×" + x.n : "")).join(", ")}). They are not in the count above.</p>` : "";
+}
+async function mkRuns(key, dates) {   // one saveRun per planting date (1 wave each), sequential so progress is visible and a failure stops cleanly
+  const g = grp(key); if (!g || !dates.length) return;
+  const btns = document.querySelectorAll("button"); btns.forEach(b => b.disabled = true); let made = 0;
+  try {
+    for (const d of dates) {
+      toast(`Creating run ${made + 1} of ${dates.length} for ${g.cropName}, plant ${fmt(d)}… this can take up to a minute`);
+      await post({action:"saveRun", crop:g.crop, platform:g.platform, dob:d, waves:1, noDup:true, user:user() || "manager"});
+      made++; g.items = g.items.filter(x => x.date !== d); B.gaps.covered++;
+    }
+    toast(made + " run" + (made > 1 ? "s" : "") + " created. Initiate the waves to hand out activities.");
+  } catch (e) { toast((made ? made + " created, then stopped: " : "") + e.message, true); }
+  finally { B.gaps.groups = B.gaps.groups.filter(x => x.items.length); btns.forEach(b => b.disabled = false); render(); load(true); }
+}
+
+/* ---------- Production calendar: propagation starts, plantings and first harvests, read from the workbook via ?action=calendar ---------- */
+async function loadCal() {
+  try { CAL = await get({action:"calendar"}); }
+  catch (e) { CAL = null; $("cal").innerHTML = `<h2>Production calendar</h2><div class="note">${esc(/Unknown action/.test(e.message) ? "The server does not have the calendar yet. Deploy the latest Code_pro.gs as a new version, then press Refresh." : e.message)}</div>`; return; }
+  calendar();
+}
+const CLAB = {prop: ["Propagation", "propagation start", "propagation starts"], plant: ["Planting", "planting", "plantings"], harv: ["Harvest", "first harvest", "first harvests"]};
+const calDate = (e, l) => l === "prop" ? e.sow : l === "plant" ? e.plant : e.harvest;
+const calVerb = (e, l) => l === "prop" ? "Sow " : l === "plant" ? (e.method === "DIRECT_SEED" ? "Direct sow " : "Plant ") : "Harvest ";
+function calEvents(l) {
+  if (!CAL) return [];
+  return CAL.events.filter(e => (l !== "prop" || e.prop) && (!CP || e.platform === CP) && (!FILTER || e.crop === FILTER)).map(e => ({e, d: calDate(e, l)}))
+    .sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : a.e.name.localeCompare(b.e.name));
+}
+function calDetail(e, l) {
+  if (l === "prop") return `${esc(e.crop)} · Germination ${e.g}d + Nursery ${e.n}d + Harden off ${e.h}d + Establish ${e.e}d · ${e.anchored ? "established by " + fmt(e.est) : "transplant " + fmt(e.plant)}`;
+  if (l === "plant") return `${esc(e.crop)} · ${esc(e.slot)} · ${esc(e.method)}${e.bed ? " · bed " + esc(e.bed) : ""}${e.prop ? " · sow " + fmt(e.sow) : ""} · first harvest ${fmt(e.harvest)}`;
+  return `${esc(e.crop)} · ${esc(e.slot)} · planted ${fmt(e.plant)} + ${e.dth} days to first harvest`;
+}
+function calRow(x, l) {
+  return `<div class="ag"><span class="badge">${pf(x.e.platform)}</span><span class="n"><b>${esc(calVerb(x.e, l) + x.e.name)}</b><br><span class="k">${calDetail(x.e, l)}</span></span></div>`;
+}
+function calendar() {
+  const el = $("cal"); if (!CAL) return;
+  const all = calEvents(CL), mine = all.filter(x => x.d.slice(0, 7) === CM), mlab = new Date(CM + "-01T00:00:00Z").toLocaleDateString(undefined, {month:"long", year:"numeric", timeZone:"UTC"}),
+    by = {}; mine.forEach(x => (by[x.d] = by[x.d] || []).push(x));
+  const crops = new Set(mine.map(x => x.e.crop)).size, btn = (a, v, cur, l) => `<button type="button" class="${cur === v ? "on" : "alt"}" data-${a}="${v}">${l}</button>`;
+  let body;
+  if (CV === "month") {
+    const first = CM + "-01", dow = new Date(first + "T00:00:00Z").getUTCDay(), dim = new Date(Date.UTC(+CM.slice(0, 4), +CM.slice(5, 7), 0)).getUTCDate(), n = Math.ceil((dow + dim) / 7) * 7, start = add(first, -dow), td = localToday();
+    let g = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => `<div class="h">${d}</div>`).join("");
+    for (let i = 0; i < n; i++) {
+      const d = add(start, i), inM = d.slice(0, 7) === CM, l = inM ? by[d] || [] : [], show = l.length > 3 ? 2 : l.length;
+      g += `<div class="${inM ? "" : "o"} ${d === td ? "tdy" : ""} ${d === CD ? "sd" : ""}"><button type="button" class="dn" data-cd="${d}" aria-label="${fmt(d)}${l.length ? ", " + l.length + " " + CLAB[CL][2] : ""}">${+d.slice(8)}</button>`
+        + l.slice(0, show).map(x => `<button type="button" class="ev" style="border-left-color:${col(x.e.crop)}" data-cd="${d}" title="${esc(calVerb(x.e, CL) + x.e.name + " · " + pf(x.e.platform))}">${esc(calVerb(x.e, CL) + x.e.name)}</button>`).join("")
+        + (l.length > show ? `<button type="button" class="ev more" data-cd="${d}">+${l.length - show} more</button>` : "") + `</div>`;
+    }
+    const sel = CD && CD.slice(0, 7) === CM ? by[CD] || [] : null;
+    body = `<div class="cal">${g}</div>${CD ? `<h3>${new Date(CD + "T00:00:00Z").toLocaleDateString(undefined, {weekday:"long", month:"short", day:"numeric", year:"numeric", timeZone:"UTC"})}</h3>${sel && sel.length ? sel.map(x => calRow(x, CL)).join("") : `<p class="k">Nothing on this day.</p>`}` : `<p class="k">Click a day to see its details.</p>`}`;
+  } else {
+    body = Object.keys(by).length ? Object.keys(by).sort().map(d => `<h3>${new Date(d + "T00:00:00Z").toLocaleDateString(undefined, {weekday:"long", month:"short", day:"numeric", year:"numeric", timeZone:"UTC"})}</h3>${by[d].map(x => calRow(x, CL)).join("")}`).join("") : `<p class="k">No ${CLAB[CL][2]} in ${mlab}.</p>`;
+  }
+  el.innerHTML = `<div class="row noprint" style="margin-top:0"><h2 style="margin:0">Production calendar</h2><span class="sp"></span>
+    ${["prop", "plant", "harv"].map(v => btn("cl", v, CL, CLAB[v][0])).join("")}</div>
+  <div class="row noprint">${btn("cv", "month", CV, "Month")}${btn("cv", "agenda", CV, "Agenda")}<span class="k">|</span>${btn("cp", "", CP, "All")}${btn("cp", "F", CP, "Field")}${btn("cp", "G", CP, "Greenhouse")}<span class="sp"></span>
+    <button type="button" class="alt" data-ccsv="1">Download CSV</button><button type="button" class="alt" data-cprint="1">Print</button></div>
+  <div class="row"><button type="button" class="alt noprint" data-cm="-1" aria-label="Previous month">‹</button><h3 style="margin:0">${mlab}</h3><span class="k">${mine.length} ${CLAB[CL][mine.length === 1 ? 1 : 2]}${mine.length ? " across " + crops + " crop" + (crops === 1 ? "" : "s") : ""}</span><button type="button" class="alt noprint" data-cm="1" aria-label="Next month">›</button><button type="button" class="alt noprint" data-cm="0">Today</button></div>
+  ${body}
+  <p class="k">Read live from the workbook: every planting comes from Planting_Plan, plus any GH_Waves date it does not list. Sow date = planting date minus pre-planting days (germination + nursery + harden-off + establish) from Crop_Parameters; crops that are direct-seeded or whose DOB is the sowing date sow on the planting date. First harvest = planting date plus days to first harvest.${FILTER ? " Filtered to the crop selected under Crops and waves." : ""}</p>`;
+}
+function calCsv() {
+  const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"', rows = calEvents(CL);
+  const head = ["Date", "Layer", "Crop", "Code", "Platform", "Plan slot", "Sow date", "Planting date", "First harvest", "Days to first harvest", "Method", "Bed"];
+  const csv = [head.map(q).join(","), ...rows.map(({e, d}) => [d, CLAB[CL][0], e.name, e.crop, pf(e.platform), e.slot, e.prop ? e.sow : "", e.plant, e.harvest, e.dth, e.method, e.bed].map(q).join(","))].join("\r\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], {type: "text/csv"})); a.download = `production-calendar-${CL}${CP ? "-" + CP : ""}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 let TRAY = null, CELLS = [], CAP = 516;
 function busiest() {
@@ -125,12 +244,12 @@ function room() {
   const runs = [...new Map(B.runs.filter(r => !r.error).map(r => [r.crop, r])).values()], pk = busiest();
   const leg = runs.map(r => { const ws = flat().filter(x => x.r.crop === r.crop && x.w.trays > 0), nx = ws.filter(x => x.w.sow > T).map(x => x.w.sow).sort()[0];
     return `<span style="margin-right:16px;white-space:nowrap"><i style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${col(r.crop)};margin-right:5px"></i><b>${esc(r.crop)}</b> ${esc(r.cropName)}: ${by[r.crop] ? by[r.crop] + " trays today" : !ws.length ? "direct-seeded, no trays" : nx ? "next in room " + fmt(nx) : "not in room after this day"}</span>`; }).join("");
-  const sel = SEL ? CELLS.map((c, i) => c.r.runId === SEL.runId && c.w.wave === SEL.wave ? i : -1) : [];
+  const noRun = noRunNote(), sel = SEL ? CELLS.map((c, i) => c.r.runId === SEL.runId && c.w.wave === SEL.wave ? i : -1) : [];
   $("room").innerHTML = `<h2>Propagation room · Bay 3</h2>
   <div class="row"><button class="alt" type="button" data-day="-1">Previous day</button><input type="date" id="day" value="${T}"><button class="alt" type="button" data-day="1">Next day</button><button class="alt" type="button" data-day="0">Today</button>${pk ? `<button class="alt" type="button" data-peak="${pk.t}">Busiest day (${pk.n} trays)</button>` : ""}
   <label class="k">Sq ft per tray <input type="number" id="sq" min="0.5" step="0.05" value="${SQ}" style="width:80px"></label></div>
   <p><b>${used}</b> of ${cap} trays occupied on ${fmt(T)} (${Math.round(used / cap * 100)}%) · ${cap - used} empty${over > 0 ? ` · <b style="color:var(--bad)">${over} trays over capacity</b>` : ""}</p>
-  ${trayInfo()}
+  ${noRun}${trayInfo()}
   <div class="trays">${CELLS.map((c, i) => `<button type="button" class="t ${c.k === "prop" ? "prop" : ""} ${c.k === "exc" ? "exc" : ""} ${i === TRAY ? "sel" : sel.includes(i) ? "wv" : ""}" style="background-color:${col(c.r.crop)}" data-tray="${i}" title="${esc(c.r.cropName)} wave ${c.w.wave}, tray ${c.i} of ${c.w.trays}" aria-label="${esc(c.r.cropName)} wave ${c.w.wave}, tray ${c.i} of ${c.w.trays}">${esc(c.r.crop)}</button>`).join("")}${Array(Math.max(0, cap - CELLS.length)).fill('<div class="t e"></div>').join("")}</div>
   <div class="k">${leg || "No runs yet."}</div><p class="k">Every crop with a saved run is listed here, including crops not in the room on the day shown. Crops appear once a run is created in the Propagation Engine.</p>`;
   $("day").onchange = e => { T = e.target.value || T; TRAY = null; render(); };
@@ -151,7 +270,7 @@ function prof() {
   <div><span class="k">Initiated</span><b>${w.init ? esc(w.init.by) + ", " + new Date(w.init.at).toLocaleDateString() : "Not yet"}</b></div></div>
   ${w.init ? "" : `<div class="row"><button type="button" data-init="${esc(r.runId)}|${w.wave}">Initiate this wave</button><span class="k">Adds every activity for the run so you can hand them out.</span></div>`}
   ${(w.phases || []).length ? `<h3>Propagation phases</h3><table><tr><th>Phase</th><th>Days</th><th>Starts</th><th>Ends</th></tr>${w.phases.map(p => `<tr class="${p.start <= T && T < p.end ? "cur" : ""}"><td>${esc(p.phase)}</td><td>${p.days}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td></tr>`).join("")}</table>` : ""}
-  <h3>Activities</h3><p class="k">Activities are shared by every wave of run ${esc(r.runId)}.</p>${acts(rs, r)}`;
+  <h3>Activities</h3><p class="k">Activities are shared by every wave of run ${esc(r.runId)}. Verify and override need your name and the manager PIN in the header.</p>${acts(rs, r)}`;
   updAssign(); if (!rs && !LOADING[r.runId]) loadRun(r.runId);
 }
 const PICK = new Set(), WPICK = new Set();
@@ -161,13 +280,40 @@ function byWorker(rs) {
 }
 function updAssign() { const b = $("asg"); if (!b) return; const a = PICK.size, w = WPICK.size;
   b.disabled = !(a && w); b.textContent = a && w ? `Assign ${a} activit${a > 1 ? "ies" : "y"} to ${w} worker${w > 1 ? "s" : ""}` : "Assign"; $("asgn").textContent = `${a} activit${a === 1 ? "y" : "ies"} and ${w} worker${w === 1 ? "" : "s"} ticked`; }
+function actRow(a, run) {
+  const gate = a.scope !== "crop-wave", k = run + a.id, bits = [], ctl = [];
+  if (a.completed) bits.push(`Completed ${when(a.completedAt)}${a.completedBy ? " by " + esc(a.completedBy) : ""}${a.count ? " · " + esc(a.count) + " " + esc(a.unit) : ""}`);
+  if (a.verified) bits.push(`Verified ${when(a.verifiedAt)}${a.verifiedBy ? " by " + esc(a.verifiedBy) : ""}${a.verifyNotes ? " · " + esc(a.verifyNotes) : ""}`);
+  if (a.overridden) bits.push(`<b>Overridden</b> by ${esc(a.overrideBy)} ${when(a.overrideAt)}: ${esc(a.overrideReason)}`);
+  if (a.completed && !a.verified && !a.overridden) ctl.push(`<div class="row"><input type="text" data-vnote="${esc(a.id)}" placeholder="Verification notes (optional)" value="${esc(DRAFT["n" + k] || "")}" aria-label="Verification notes for ${esc(a.id)}"><button type="button" data-verify="${esc(a.id)}">Verify</button></div>`);
+  if (gate && !a.verified && !a.overridden) ctl.push(`<details><summary>Manager override</summary><div class="row"><input type="text" data-why="${esc(a.id)}" placeholder="Reason (required)" value="${esc(DRAFT["w" + k] || "")}" aria-label="Override reason for ${esc(a.id)}"><button type="button" class="alt" data-override="${esc(a.id)}">Override gate</button></div></details>`);
+  return `<div class="act"><label class="ar"><input type="checkbox" data-pick="${esc(a.id)}" ${PICK.has(a.id) ? "checked" : ""}><span class="n"><b>${esc(a.id)}</b> ${esc(a.name)}${gate ? ' <span class="badge s-exc">required gate</span>' : ""}</span><span class="k">${esc(statusOf(a))}${a.assignee ? " · " + esc(String(a.assignee).replace(/;\s*/g, ", ")) : ""}${a.locked ? " · locked until the gates are cleared" : ""}</span></label>${bits.length ? `<div class="d">${bits.join("<br>")}</div>` : ""}${ctl.join("")}</div>`;
+}
+async function actVerify(id, b) {
+  const run = SEL.runId, pin = $("pin").value, k = run + id;
+  if (!user()) return toast("Type your name at the top first. Verification records who did it.", true);
+  if (!pin) return toast("Enter the manager PIN at the top first.", true);
+  b.disabled = true;
+  try { RS[run] = await post({action:"verify", runId:run, activityId:id, pin, user:user(), notes:(DRAFT["n" + k] || "").trim()}); $("pin").value = ""; delete DRAFT["n" + k]; toast("Verified " + id); prof(); load(true); }
+  catch (e) { b.disabled = false; toast(e.message, true); }
+}
+async function actOverride(id, b) {
+  const run = SEL.runId, pin = $("pin").value, k = run + id, why = (DRAFT["w" + k] || "").trim();
+  if (!user()) return toast("Type your name at the top first. The override records who did it.", true);
+  if (!why) return toast("Type the reason for the override first. It is required and is recorded.", true);
+  if (!pin) return toast("Enter the manager PIN at the top first.", true);
+  if (!confirm(`Override ${id} on run ${run}?\n\nThe gate will count as cleared without being completed and verified, so it stops blocking the run. Your reason is recorded. The board cannot undo an override.`)) return;
+  b.disabled = true;
+  try { RS[run] = await post({action:"override", runId:run, activityId:id, pin, reason:why, user:user()}); $("pin").value = ""; delete DRAFT["w" + k]; toast("Overridden " + id); prof(); load(true); }
+  catch (e) { b.disabled = false; toast(e.message, true); }
+}
 function acts(rs, r) {
   if (!rs) return `<p class="k">Loading activities…</p>`;
   if (!rs.activities.length) return `<p class="k">No activities yet. Initiate a wave to add them.</p>`;
   const by = {}; rs.activities.forEach(a => (by[a.phase || "Required gate activities"] = by[a.phase || "Required gate activities"] || []).push(a)); PH = Object.entries(by);
   return `<div class="row"><button class="alt" type="button" data-selall="un">Tick all unassigned</button><button class="alt" type="button" data-selall="all">Tick all</button><button class="alt" type="button" data-selall="none">Clear ticks</button></div>`
   + PH.map(([ph, l], i) => `<details ${l.some(a => !a.assignee) ? "open" : ""}><summary>${esc(ph)} · ${l.filter(a => a.assignee).length} of ${l.length} assigned</summary><div class="row" style="margin:4px 0"><button class="alt" type="button" data-pall="${i}">Tick or clear this phase</button></div>
-    ${l.map(a => `<label class="ar"><input type="checkbox" data-pick="${esc(a.id)}" ${PICK.has(a.id) ? "checked" : ""}><span class="n"><b>${esc(a.id)}</b> ${esc(a.name)}${a.scope !== "crop-wave" ? ' <span class="badge s-exc">required gate</span>' : ""}</span><span class="k">${esc(statusOf(a))}${a.assignee ? " · " + esc(String(a.assignee).replace(/;\s*/g, ", ")) : ""}</span></label>`).join("")}</details>`).join("")
+    ${l.map(a => actRow(a, r.runId)).join("")}</details>`).join("")
   + `<h3>Workers</h3>${B.workers.length ? `<div class="team">${B.workers.map(x => `<label><input type="checkbox" data-wk="${esc(x.id)}" ${WPICK.has(x.id) ? "checked" : ""}> ${esc(x.name)} <span class="k">${esc(x.role)}</span></label>`).join("")}</div>` : `<p class="k">No active workers found in USERS.</p>`}
   <div class="row"><label class="k">Due date (optional) <input type="date" id="due"></label><button type="button" id="asg" data-assign="1" disabled>Assign</button><span class="k" id="asgn"></span></div>
   <p class="k">Tick any activities and any workers. Every ticked worker joins the team on every ticked activity, so one worker can take many activities and one activity can have several workers. Ticking an already assigned activity replaces its team.</p>${byWorker(rs)}`;
@@ -179,11 +325,19 @@ function queue() {
     if (T >= w.plant) return null;
     if (!w.init && d <= 14) return {r, w, d, why: d < 0 ? "Sow date passed, wave not initiated" : "Not initiated, sow in " + d + " d", p: d <= 3 ? "must" : d <= 7 ? "att" : "rtn", init: true};
     if (k === "exc") return {r, w, d, why: "Gate activities need completing and verifying", p: "att"};
-    return null; }).filter(Boolean).sort((a, b) => a.d - b.d);
-  $("qb").textContent = `Assignment queue (${items.length})`; QI.length = 0; items.filter(i => i.init).forEach(i => QI.push(i));
-  const lab = {must: "Must do", att: "Attention", rtn: "Routine"}, todo = [...new Set(items.filter(i => i.init).map(i => i.r.runId))];
+    return null; }).filter(Boolean);
+  if (B.gaps) B.gaps.groups.forEach(g => { if (g.error) return; g.items.forEach(i => { if (!gapLive(i)) return; const sow = gapSow(g, i.date), d = days(T, sow); if (d > 14) return;
+    items.push({gap: true, g, i, sow, d, why: d < 0 ? "No run, sow date passed" : d === 0 ? "No run, sow today" : "No run, sow in " + d + " d", p: d <= 3 ? "must" : d <= 7 ? "att" : "rtn"}); }); });
+  B.runs.forEach(r => { if (!r.error && r.acts.awaiting > 0) items.push({ver: true, r, w: r.waves[0], d: days(T, r.waves[0].sow), p: "att", why: `${r.acts.awaiting} activit${r.acts.awaiting > 1 ? "ies" : "y"} done, awaiting verification`}); });
+  items.sort((a, b) => (b.ver ? 1 : 0) - (a.ver ? 1 : 0) || a.d - b.d);   // finished work waiting on the manager goes first (a worker is blocked), then by sow date
+  const shown = QALL ? items : items.slice(0, 30);   // the plan can leave dozens of unrun plantings due at once, so show the most urgent first
+  $("qb").textContent = `Assignment queue (${items.length})`; QI.length = 0; shown.filter(i => i.init).forEach(i => QI.push(i));
+  const lab = {must: "Must do", att: "Attention", rtn: "Routine"}, todo = [...new Set(shown.filter(i => i.init).map(i => i.r.runId))];
+  const row = i => i.gap ? `<div class="q"><span class="pri ${i.p}">${lab[i.p]}</span><span class="n"><b>${esc(i.g.cropName)} (${pf(i.g.platform)}), plant ${fmt(i.i.date)}</b> <span class="k">${esc(i.why)} · sow ${fmt(i.sow)}</span></span><button type="button" data-mk="${esc(i.g.crop + "|" + i.g.platform)}|${i.i.date}">Create run</button></div>`
+    : i.ver ? `<div class="q"><span class="pri ${i.p}">${lab[i.p]}</span><span class="n"><b>${esc(i.r.cropName)} · run ${esc(i.r.runId)}</b> <span class="k">${esc(i.why)}</span></span><button type="button" class="alt" data-sel="${esc(i.r.runId)}|${i.w.wave}">Open</button></div>`
+    : `<div class="q"><span class="pri ${i.p}">${lab[i.p]}</span><span class="n"><b>${esc(i.r.cropName)} wave ${i.w.wave}</b> <span class="k">${esc(i.why)} · sow ${fmt(i.w.sow)}</span></span><button type="button" class="alt" data-sel="${esc(i.r.runId)}|${i.w.wave}">Open</button>${i.init ? `<button type="button" data-init="${esc(i.r.runId)}|${i.w.wave}">Initiate</button>` : ""}</div>`;
   $("qp").innerHTML = `<div class="row" style="margin-top:0"><h2 style="margin:0">Assignment queue</h2>${todo.length ? `<button type="button" data-initq="1">Initiate all listed waves</button>` : ""}</div>
-  ${items.length ? items.map(i => `<div class="q"><span class="pri ${i.p}">${lab[i.p]}</span><span class="n"><b>${esc(i.r.cropName)} wave ${i.w.wave}</b> <span class="k">${esc(i.why)} · sow ${fmt(i.w.sow)}</span></span><button type="button" class="alt" data-sel="${esc(i.r.runId)}|${i.w.wave}">Open</button>${i.init ? `<button type="button" data-init="${esc(i.r.runId)}|${i.w.wave}">Initiate</button>` : ""}</div>`).join("") : `<p class="k">Nothing waiting. Waves due to sow in the next 14 days are all initiated.</p>`}`;
+  ${items.length ? shown.map(row).join("") + (items.length > 30 ? `<div class="row"><button type="button" class="alt" data-qall="${QALL ? 0 : 1}">${QALL ? "Show only the 30 most urgent" : "Show all " + items.length}</button><span class="k">Most urgent first.</span></div>` : "") : `<p class="k">Nothing waiting. Every planting due to sow in the next 14 days has a run and is initiated, and nothing is awaiting verification.</p>`}`;
 }
 async function initWaves(runId, waves) {
   const set = waves === "all" ? null : [].concat(waves).map(Number), btns = document.querySelectorAll("button"); btns.forEach(b => b.disabled = true); toast("Initiating… this can take 10 to 20 seconds");
@@ -195,7 +349,11 @@ async function initWaves(runId, waves) {
 function pickRun(id, w) { if (!SEL || SEL.runId !== id) PICK.clear(); SEL = {runId: id, wave: w}; }
 document.addEventListener("change", e => { const t = e.target.dataset || {};
   if (t.pick) { e.target.checked ? PICK.add(t.pick) : PICK.delete(t.pick); updAssign(); }
-  if (t.wk) { e.target.checked ? WPICK.add(t.wk) : WPICK.delete(t.wk); updAssign(); } });
+  if (t.wk) { e.target.checked ? WPICK.add(t.wk) : WPICK.delete(t.wk); updAssign(); }
+  if (e.target.id === "urg") { URG = e.target.checked; gaps(); } });
+document.addEventListener("input", e => { const t = e.target.dataset || {}, r = SEL && SEL.runId;
+  if (t.vnote) DRAFT["n" + r + t.vnote] = e.target.value; if (t.why) DRAFT["w" + r + t.why] = e.target.value; });
+document.addEventListener("toggle", e => { const k = e.target.dataset && e.target.dataset.g; if (k) e.target.open ? OPENG.add(k) : OPENG.delete(k); }, true);
 document.addEventListener("click", async e => {
   const b = e.target.closest("button"); if (!b) return; const d = b.dataset, rs = SEL && RS[SEL.runId];
   if (d.sel) { const [id, w] = d.sel.split("|"); pickRun(id, +w); TRAY = null; render(); $("prof").scrollIntoView({behavior:"smooth", block:"nearest"}); }
@@ -206,6 +364,20 @@ document.addEventListener("click", async e => {
   else if (d.peak) { T = d.peak; TRAY = null; render(); }
   else if (d.selall && rs) { PICK.clear(); rs.activities.forEach(a => { if (d.selall === "all" || (d.selall === "un" && !a.assignee)) PICK.add(a.id); }); prof(); }
   else if (d.pall !== undefined) { const ids = PH[+d.pall][1].map(a => a.id), all = ids.every(i => PICK.has(i)); ids.forEach(i => all ? PICK.delete(i) : PICK.add(i)); prof(); }
+  else if (d.mk) { const [c, pl, dt] = d.mk.split("|"), g = grp(c + "|" + pl);
+    if (g && confirm(`Create a run for ${g.cropName} (${pf(pl)}), planting date ${fmt(dt)}?\n\nIt starts with this one date. Runs cannot be deleted from the board.`)) mkRuns(c + "|" + pl, [dt]); }
+  else if (d.mkall) { const g = grp(d.mkall), l = g ? gapList(g).filter(gapLive).map(x => x.date) : [];
+    if (l.length && confirm(`Create ${l.length} separate runs for ${g.cropName} (${pf(g.platform)}), one per planting date?\n\nEach takes several seconds. Runs cannot be deleted from the board.`)) mkRuns(d.mkall, l); }
+  else if (d.cl) { CL = d.cl; CD = null; calendar(); }
+  else if (d.cv) { CV = d.cv; calendar(); }
+  else if (d.cp !== undefined) { CP = d.cp; calendar(); }
+  else if (d.cm !== undefined) { if (d.cm === "0") { CM = localToday().slice(0, 7); } else { const y = +CM.slice(0, 4), m = +CM.slice(5, 7) - 1 + +d.cm, x = new Date(Date.UTC(y, m, 1)); CM = x.toISOString().slice(0, 7); } CD = null; calendar(); }
+  else if (d.cd) { CD = d.cd; CM = d.cd.slice(0, 7); CV = "month"; calendar(); }
+  else if (d.ccsv) calCsv();
+  else if (d.cprint) window.print();
+  else if (d.qall !== undefined) { QALL = d.qall === "1"; queue(); }
+  else if (d.verify) actVerify(d.verify, b);
+  else if (d.override) actOverride(d.override, b);
   else if (d.assign) {
     const id = SEL.runId, n = PICK.size; b.disabled = true; toast(`Assigning ${n} activit${n > 1 ? "ies" : "y"}… this can take up to a minute`);
     try { RS[id] = await post({action:"assign", runId:id, activityIds:[...PICK], workerIds:[...WPICK], due:$("due").value, user:user()}); PICK.clear(); toast("Assigned"); prof(); load(true); }
@@ -213,7 +385,8 @@ document.addEventListener("click", async e => {
   }
 });
 $("qb").onclick = () => $("qp").classList.toggle("hidden");
-$("refresh").onclick = () => { RS = {}; toast("Refreshing…"); load(); };
+$("cb").onclick = () => $("cal").classList.toggle("hidden");
+$("refresh").onclick = () => { RS = {}; CAL = null; toast("Refreshing…"); load(); };
 try { $("user").value = localStorage.getItem("board_user") || ""; } catch (e) {}
 $("user").onchange = () => { try { localStorage.setItem("board_user", $("user").value); } catch (e) {} };
 load();
