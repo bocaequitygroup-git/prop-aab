@@ -47,6 +47,7 @@ button.on{background:var(--acc);color:var(--bg);border:0}
 .cal .dn{display:inline-block;min-height:0;padding:0 6px;font-size:12px;font-weight:600;background:none;color:var(--ink);border:0;border-radius:99px}.cal .tdy .dn{background:var(--acc);color:var(--bg)}
 .cal .ev{display:block;width:100%;text-align:left;font-weight:400;font-size:11.5px;line-height:1.3;padding:2px 4px;margin-top:2px;min-height:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:0;border-left:4px solid var(--acc);background:var(--bg);color:var(--ink);border-radius:4px}
 .cal .ev.more{border-left-color:var(--line);color:var(--mute)}.cal>.sd{outline:2px solid var(--ink);outline-offset:-2px}
+.tf{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 12px;align-items:end;margin:8px 0}.tf label{display:grid;gap:2px}.tw{overflow-x:auto}.lt tr.sub td{color:var(--mute)}.lt tr.sub td:first-child{padding-left:28px}.lt tr.tot td{font-weight:700;border-top:2px solid var(--line)}.lt tr.grp td{font-weight:600}
 .ag{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}.ag .n{flex:1;min-width:220px}
 @media print{header,.leg,.lay,#qp,#err,#toast,#cal .noprint{display:none!important}body{background:#fff}#cal{border:0}}
 @media(prefers-reduced-motion:no-preference){.t{transition:transform .1s}.t:not(.e):hover{transform:scale(1.25)}}
@@ -56,6 +57,8 @@ button.on{background:var(--acc);color:var(--bg);border:0}
 <span class="conn off" id="conn">Connecting…</span><span class="sp"></span>
 <button class="alt" id="qb" type="button">Assignment queue (0)</button>
 <button class="alt" id="cb" type="button">Production calendar</button>
+<button class="alt" id="tb" type="button">Team</button>
+<button class="alt" id="lb" type="button">Labor Hours</button>
 <label class="k">Your name <input id="user" size="12" autocomplete="name"></label>
 <label class="k">Manager PIN <input id="pin" type="password" size="7" autocomplete="off" aria-label="Manager PIN, needed to verify or override"></label>
 <button class="alt" id="refresh" type="button">Refresh</button>
@@ -63,6 +66,8 @@ button.on{background:var(--acc);color:var(--bg);border:0}
 <div class="leg"><span><i style="background:var(--mute);opacity:.6"></i>Not initiated</span><span><i style="background:var(--acc);opacity:.45"></i>Initiated</span><span><i style="background:var(--acc)"></i>In propagation</span><span><i style="background:var(--warn)"></i>Needs attention</span><span><i style="background:var(--line)"></i>Planted</span><span><i style="border:1px solid var(--line)"></i>Empty tray</span><span><i style="border:1px dashed var(--mute)"></i>Planned, no run</span></div>
 <div id="err" class="note hidden" style="margin:0 16px 10px"></div>
 <section class="card hidden" id="qp" style="margin:0 16px 14px"></section>
+<section class="card hidden" id="team" style="margin:0 16px 14px"></section>
+<section class="card hidden" id="lab" style="margin:0 16px 14px"></section>
 <section class="card" id="cal" style="margin:0 16px 14px"><p class="k">Loading the production calendar…</p></section>
 <div class="lay">
 <div><section class="card" id="crops"><p class="k">Loading crops and waves…</p></section>
@@ -220,6 +225,87 @@ function calCsv() {
   const csv = [head.map(q).join(","), ...rows.map(({e, d}) => [d, CLAB[CL][0], e.name, e.crop, pf(e.platform), e.slot, e.method, e.prop ? e.sow : "", e.plant].map(q).join(","))].join("\r\n");
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], {type: "text/csv"})); a.download = `production-calendar-${CL}${CP ? "-" + CP : ""}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
+
+/* ---------- Team: workers in USERS, add a worker, reset a PIN, total labor hours. Everything here needs the manager PIN typed in the header. ---------- */
+let TM = null, TNOTE = "";   // worker list + total labor hours from the server, and the one-time PIN notice
+const mgrPin = () => $("pin").value;
+function team() {
+  const el = $("team"); if (el.classList.contains("hidden")) return;
+  el.innerHTML = `<div class="row" style="margin-top:0"><h2 style="margin:0">Team</h2><span class="sp"></span><button type="button" class="alt" data-tload="1">Reload</button><button type="button" class="alt" data-tclose="1">Close</button></div>
+  ${TNOTE ? `<div class="note">${TNOTE}</div>` : ""}
+  ${!TM ? `<p class="k">Type the manager PIN in the header, then press Reload.</p>` : `<div class="grid"><div><span class="k">Total labor hours</span><b>${(+TM.totalLaborHours || 0).toLocaleString(undefined, {maximumFractionDigits: 2})} h</b></div></div>
+  <h3>Add worker</h3>
+  <div class="tf"><label class="k">Name<input id="tn" maxlength="60" placeholder="e.g. Maria Lopez" autocomplete="off"></label>
+    <label class="k">Worker ID (optional)<input id="ti" maxlength="30" placeholder="auto from name" autocomplete="off"></label>
+    <label class="k">PIN (optional, 4-8 digits)<input id="tp" inputmode="numeric" maxlength="8" placeholder="blank = generate" autocomplete="off"></label>
+    <label class="k">Role<select id="tr"><option>Worker</option><option>Manager</option></select></label>
+    <button type="button" data-tadd="1">Add worker</button></div>
+  <div class="tw"><table><tr><th>Name</th><th>ID</th><th>Role</th><th>Status</th><th>PIN</th><th></th></tr>
+  ${TM.workers.map(w => `<tr><td>${esc(w.name)}</td><td>${esc(w.id)}</td><td>${esc(w.role)}</td><td>${esc(w.status)}</td><td>${w.pinSet ? "PIN set" : "No PIN"}</td><td>${String(w.role).toLowerCase() === "founder" ? `<span class="k">Founder only</span>` : `<button type="button" class="alt" data-treset="${esc(w.id)}">Reset PIN</button>`}</td></tr>`).join("")}</table></div>`}`;
+}
+async function loadTeam() {
+  if (!mgrPin()) return toast("Type the manager PIN in the header first.", true);
+  try { TM = await post({action:"team", pin:mgrPin()}); TNOTE = ""; team(); } catch (e) { toast(e.message, true); }
+}
+async function teamAct(body, b) {   // add / reset: the server returns the refreshed list; the PIN box is cleared after a change, like verify and override
+  if (!mgrPin()) return toast("Type the manager PIN in the header first.", true);
+  b.disabled = true;
+  try { const r = await post({...body, pin:mgrPin(), user:user()}); $("pin").value = ""; TM = r.team;
+    const x = r.added || r.reset, was = r.added ? "added" : "PIN reset";
+    TNOTE = x.pin ? `${esc(x.name)} (${esc(x.id)}) ${was}. New PIN: <b>${esc(x.pin)}</b>. It is shown once and cannot be looked up later, so hand it over now.` : `${esc(x.name)} (${esc(x.id)}) ${was} with the PIN you set.`;
+    team(); load(true); }
+  catch (e) { b.disabled = false; toast(e.message, true); }
+}
+
+/* ---------- Labor Hours: closed work sessions from the permanent ledger (FIELD_ACTIVITY_LOG, via the read-only ?action=log feed). ---------- */
+let LAB = null, LB = {show: "7", from: "", to: "", view: "worker"};   // LAB = effective ledger entries; LB = date range, preset and view
+const LSH = {"7": "Last 7 days", "30": "Last 30 days", all: "All time"}, LVW = {worker: "By worker", activity: "By activity", sessions: "All sessions"}, NOWK = "No worker recorded";
+const ldate = s => { s = String(s || ""); if (s.length <= 10) return s; const d = new Date(s); return isNaN(d) ? s.slice(0, 10) : new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
+const hm = h => { const m = Math.round(h * 60); return Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0"); };
+function labPreset() {
+  const t = localToday(), ds = (LAB || []).map(x => x.d).filter(Boolean).sort();
+  if (LB.show === "7") { LB.from = add(t, -6); LB.to = t; } else if (LB.show === "30") { LB.from = add(t, -29); LB.to = t; }
+  else if (LB.show === "all") { LB.from = ds[0] || t; LB.to = ds.length && ds[ds.length - 1] > t ? ds[ds.length - 1] : t; }
+}
+async function loadLab() {
+  try { const r = await get({action:"log"});
+    LAB = r.entries.filter(x => !x.correctedBy).map(x => ({id: x.log_id, d: ldate(x.closed_at || x.started_at), at: x.closed_at || x.started_at, h: Number(x.labor_hours) || 0, crop: x.crop_code, wave: x.wave,
+      act: String(x.activity_name || x.activity_id || "Unnamed activity").trim(), who: String(x.workers || "").split(/[;,]/).map(n => n.trim()).filter(Boolean)}));
+    labPreset(); labor(); }
+  catch (e) { LAB = null; $("lab").innerHTML = `<div class="row" style="margin-top:0"><h2 style="margin:0">Labor Hours</h2><span class="sp"></span><button type="button" class="alt" data-lclose="1">Close</button></div><div class="note">${esc(e.message)}</div>`; }
+}
+function labGroups(es, view) {   // a session with several workers splits its hours equally between them, so the grand total always equals the ledger total
+  const top = new Map(), a = x => view === "worker" ? x.w : x.act, b = x => view === "worker" ? x.act : x.w;
+  es.forEach(e => (e.who.length ? e.who : [NOWK]).forEach(w => { const x = {w, act: e.act, h: e.h / Math.max(1, e.who.length), id: e.id}, k = a(x);
+    const g = top.get(k) || {key: k, ids: new Set(), h: 0, subs: new Map()}; top.set(k, g); g.ids.add(x.id); g.h += x.h;
+    const sg = g.subs.get(b(x)) || {key: b(x), ids: new Set(), h: 0}; g.subs.set(b(x), sg); sg.ids.add(x.id); sg.h += x.h; }));
+  const srt = (p, q) => q.h - p.h || q.ids.size - p.ids.size || String(p.key).localeCompare(q.key);
+  return [...top.values()].sort(srt).map(g => ({key: g.key, n: g.ids.size, h: g.h, subs: [...g.subs.values()].sort(srt).map(x => ({key: x.key, n: x.ids.size, h: x.h}))}));
+}
+function labView() {
+  const es = LAB.filter(x => x.d >= LB.from && x.d <= LB.to), tot = es.reduce((n, x) => n + x.h, 0);
+  if (LB.view === "sessions") { const l = es.slice().sort((p, q) => String(q.at).localeCompare(String(p.at))); return {es, tot, head: ["Date", "Worker", "Activity", "Hours (h:mm)", "Hours (decimal)"], csv: ["Closed at", "Worker", "Activity", "Crop", "Wave", "Hours (h:mm)", "Hours (decimal)"],
+    rows: l.map(x => ({c: [fmt(x.d), x.who.join(", ") || NOWK, x.act, hm(x.h), x.h.toFixed(2)], r: [x.at, x.who.join(", ") || NOWK, x.act, x.crop, x.wave, hm(x.h), x.h.toFixed(2)]})),
+    total: ["Total", "", `${es.length} session${es.length === 1 ? "" : "s"}`, hm(tot), tot.toFixed(2)]}; }
+  const g = labGroups(es, LB.view), w = LB.view === "worker", rows = [];
+  g.forEach(x => { rows.push({cls: "grp", c: [x.key, x.n, hm(x.h), x.h.toFixed(2)], r: w ? [x.key, "", x.n, hm(x.h), x.h.toFixed(2)] : ["", x.key, x.n, hm(x.h), x.h.toFixed(2)]});
+    x.subs.forEach(y => rows.push({cls: "sub", c: [y.key, y.n, hm(y.h), y.h.toFixed(2)], r: w ? [x.key, y.key, y.n, hm(y.h), y.h.toFixed(2)] : [y.key, x.key, y.n, hm(y.h), y.h.toFixed(2)]})); });
+  return {es, tot, head: [w ? "Worker / activity" : "Activity / worker", "Sessions", "Hours (h:mm)", "Hours (decimal)"], csv: ["Worker", "Activity", "Sessions", "Hours (h:mm)", "Hours (decimal)"], rows, total: ["Total", es.length, hm(tot), tot.toFixed(2)]};
+}
+function labor() {
+  const el = $("lab"); if (el.classList.contains("hidden") || !LAB) return;
+  const btn = (a, v, cur, l) => `<button type="button" class="${cur === v ? "on" : "alt"}" data-${a}="${v}">${l}</button>`, bad = LB.from > LB.to, v = bad ? null : labView();
+  el.innerHTML = `<div class="row" style="margin-top:0"><h2 style="margin:0">Labor Hours</h2><span class="sp"></span><button type="button" class="alt" data-lload="1">Reload</button><button type="button" class="alt" data-lclose="1">Close</button></div>
+  <div class="row"><label class="k">From <input type="date" id="lf" value="${LB.from}"></label><label class="k">To <input type="date" id="lt" value="${LB.to}"></label>
+    <span class="k">Show</span>${Object.keys(LSH).map(k => btn("lshow", k, LB.show, LSH[k])).join("")}</div>
+  <div class="row">${Object.keys(LVW).map(k => btn("lview", k, LB.view, LVW[k])).join("")}<span class="sp"></span><button type="button" class="alt" data-lcsv="1" ${v && v.rows.length ? "" : "disabled"}>Download CSV</button></div>
+  ${bad ? `<div class="note">The From date is after the To date.</div>` : `<p><b>${v.tot.toLocaleString(undefined, {maximumFractionDigits: 2})} h</b> total labor hours · ${v.es.length} session${v.es.length === 1 ? "" : "s"} from ${fmt(LB.from)} to ${fmt(LB.to)}</p>
+  ${v.rows.length ? `<div class="tw"><table class="lt"><tr>${v.head.map(h => `<th>${h}</th>`).join("")}</tr>${v.rows.map(r => `<tr class="${r.cls || ""}">${r.c.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}<tr class="tot">${v.total.map(c => `<td>${esc(c)}</td>`).join("")}</tr></table></div>` : `<p class="k">No closed sessions in this range.</p>`}`}`;
+}
+function labCsv() {
+  const v = labView(), q = x => '"' + String(x ?? "").replace(/"/g, '""') + '"', csv = [v.csv.map(q).join(","), ...v.rows.map(r => r.r.map(q).join(",")), (v.csv.length === 7 ? ["Total", "", "", "", "", hm(v.tot), v.tot.toFixed(2)] : ["Total", "", v.es.length, hm(v.tot), v.tot.toFixed(2)]).map(q).join(",")].join("\r\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], {type: "text/csv"})); a.download = `labor-hours-${LB.view}-${LB.from}-to-${LB.to}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
 let TRAY = null, CELLS = [], CAP = 516;
 function busiest() {
   const all = flat().filter(x => x.w.trays > 0); if (!all.length) return null;
@@ -372,6 +458,19 @@ document.addEventListener("click", async e => {
   else if (d.cp !== undefined) { CP = d.cp; calendar(); }
   else if (d.cm !== undefined) { if (d.cm === "0") { CM = localToday().slice(0, 7); } else { const y = +CM.slice(0, 4), m = +CM.slice(5, 7) - 1 + +d.cm, x = new Date(Date.UTC(y, m, 1)); CM = x.toISOString().slice(0, 7); } CD = null; calendar(); }
   else if (d.cd) { CD = d.cd; CM = d.cd.slice(0, 7); CV = "month"; calendar(); }
+  else if (d.tload) loadTeam();
+  else if (d.tclose) { $("team").classList.add("hidden"); TNOTE = ""; }
+  else if (d.tadd) { const nm = $("tn").value.trim(), wp = $("tp").value.trim();
+    if (!nm) return toast("Type the worker's name.", true);
+    if (wp && !/^\d{4,8}$/.test(wp)) return toast("The PIN must be 4 to 8 digits, or leave it blank to generate one.", true);
+    teamAct({action:"addWorker", name:nm, workerId:$("ti").value.trim(), workerPin:wp, role:$("tr").value}, b); }
+  else if (d.treset) { const w = TM && TM.workers.find(x => x.id === d.treset);
+    if (w && confirm(`Reset the PIN for ${w.name} (${w.id})?\n\nTheir current PIN stops working at the next sign-in and a new one is generated. It is shown once.`)) teamAct({action:"resetPin", workerId:d.treset}, b); }
+  else if (d.lload !== undefined) { LAB = null; loadLab(); }
+  else if (d.lclose !== undefined) $("lab").classList.add("hidden");
+  else if (d.lshow) { LB.show = d.lshow; labPreset(); labor(); }
+  else if (d.lview) { LB.view = d.lview; labor(); }
+  else if (d.lcsv !== undefined) labCsv();
   else if (d.ccsv) calCsv();
   else if (d.cprint) window.print();
   else if (d.qall !== undefined) { QALL = d.qall === "1"; queue(); }
@@ -385,6 +484,9 @@ document.addEventListener("click", async e => {
 });
 $("qb").onclick = () => $("qp").classList.toggle("hidden");
 $("cb").onclick = () => $("cal").classList.toggle("hidden");
+$("lb").onclick = () => { const el = $("lab"); el.classList.toggle("hidden"); if (!el.classList.contains("hidden")) { if (LAB) labor(); else { el.innerHTML = `<p class="k">Loading labor hours…</p>`; loadLab(); } } };
+document.addEventListener("change", e => { if (e.target.id === "lf" || e.target.id === "lt") { LB[e.target.id === "lf" ? "from" : "to"] = e.target.value || LB[e.target.id === "lf" ? "from" : "to"]; LB.show = ""; labor(); } });
+$("tb").onclick = () => { const el = $("team"); el.classList.toggle("hidden"); if (!el.classList.contains("hidden")) { team(); if (!TM && mgrPin()) loadTeam(); else el.scrollIntoView({behavior:"smooth", block:"nearest"}); } };
 $("refresh").onclick = () => { RS = {}; CAL = null; toast("Refreshing…"); load(); };
 try { $("user").value = localStorage.getItem("board_user") || ""; } catch (e) {}
 $("user").onchange = () => { try { localStorage.setItem("board_user", $("user").value); } catch (e) {} };
