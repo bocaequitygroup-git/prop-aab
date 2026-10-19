@@ -33,7 +33,7 @@ label.ar{cursor:pointer}label.ar input,.team input{min-height:0;width:18px;heigh
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}.grid div{border:1px solid var(--line);border-radius:8px;padding:8px 10px}.grid b{display:block}
 table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--mute);font-size:13px}tr.cur td{background:var(--accs);font-weight:600}
 .ar{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:5px 0;border-bottom:1px dashed var(--line);font-size:14px}.ar .n{flex:1;min-width:180px}
-details{margin:6px 0;border:1px solid var(--line);border-radius:8px;padding:6px 10px}summary{cursor:pointer;font-weight:600}.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+details.help{background:var(--accs);border-color:transparent}details.help ol{margin:6px 0 6px 20px;padding:0}details.help li,details.help p{margin:5px 0;font-size:14px;line-height:1.45}details{margin:6px 0;border:1px solid var(--line);border-radius:8px;padding:6px 10px}summary{cursor:pointer;font-weight:600}.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
 .q{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}.q .n{flex:1;min-width:200px}
 .pri{font-weight:700;font-size:12px;padding:2px 8px;border-radius:5px}.pri.must{background:var(--bad);color:var(--bg)}.pri.att{background:var(--warns);color:var(--warn)}.pri.rtn{background:var(--accs);color:var(--acc)}
 #toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;z-index:9;max-width:90vw}
@@ -106,6 +106,7 @@ const post = b => call(API_URL, {method:"POST", headers:hdr, body:JSON.stringify
 
 let B = {runs: [], workers: []}, SEL = null, T = localToday(), RS = {}, FILTER = "", SQ = 1.55, PH = [], URG = false, QALL = false;
 let CAL = null, CL = "prop", CV = "month", CP = "", CM = localToday().slice(0, 7), CD = null;   // production calendar: data, layer, view, platform filter, month, selected day
+let HELPOPEN = false;
 const OPENG = new Set(), DRAFT = {};   // open gap groups, and half-typed verify notes / override reasons (kept across re-renders)
 const when = s => { if (!s) return ""; const d = new Date(String(s).length <= 10 ? s + "T00:00:00" : s); return isNaN(d) ? esc(s) : d.toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"}); };
 const user = () => ME ? ME.name : "";
@@ -149,6 +150,17 @@ function gaps() {
   const gs = B.gaps.groups.filter(g => !FILTER || g.crop === FILTER).map(g => ({g, l: gapList(g)})).filter(x => x.l.length),
     total = gs.reduce((n, x) => n + x.l.length, 0), live = gs.reduce((n, x) => n + x.l.filter(gapLive).length, 0);
   el.innerHTML = `<h2>Planned, no run</h2>
+  <details class="help" id="gh" ${HELPOPEN ? "open" : ""}><summary>How Create run works</summary>
+    <p><b>Planned, no run</b> means the date is in the season plan but nothing has been set up to do the work yet. It is not an approval step, and the location, bed and tray count are already known from the plan.</p>
+    <ol>
+      <li><b>Create run.</b> Makes a run with one wave for that planting date. The wave starts as <i>Not initiated</i>. No activities exist yet and no one has been given any work.</li>
+      <li><b>Initiate.</b> Adds the full activity list for the wave so you can hand the activities out. Do this in Crops and waves, or from the Assignment queue.</li>
+      <li><b>Assign.</b> Open the wave, tick activities and workers, set an optional due date, and press Assign. Workers only see work after this step.</li>
+      <li><b>Verify.</b> Required gate activities must be completed by a worker and verified by you (or overridden with a written reason) before the wave counts as cleared to sow.</li>
+    </ol>
+    <p><b>When is a tray ready to sow?</b> When the run exists, the wave is initiated, and its gate activities are verified. The sow date shows when sowing should happen. The wave turns red (<i>Gate activities unverified</i>) if it reaches that date with gates still open.</p>
+    <p class="k">Only plantings due to sow within 14 days appear in the Assignment queue. Runs cannot be deleted from the board, so create only the ones you need. Creating a run takes several seconds, and initiating takes 10 to 20 seconds.</p>
+  </details>
   <p class="k">Planting dates in Planting_Plan and GH_Waves that no saved run lands on (matched by exact planting date): ${B.gaps.planned - B.gaps.covered} of ${B.gaps.planned} planned dates this season. Create a run from any of them.</p>
   <label class="k chk"><input type="checkbox" id="urg" ${URG ? "checked" : ""}> Only sow dates within 30 days of ${fmt(T)}, or already passed</label>
   <p><b>${total}</b> shown${FILTER ? " for this crop" : ""}${total > live ? `, ${total - live} with a planting date that has already passed` : ""}.</p>
@@ -159,6 +171,7 @@ function gaps() {
     ${g.error ? `<div class="note">${esc(g.error)}. Runs cannot be created for this crop until that is fixed.</div>` : ""}${(g.notes || []).map(n => `<div class="note">${esc(n)}</div>`).join("")}
     ${!g.error && nl.length > 1 ? `<div class="row"><button type="button" class="alt" data-mkall="${esc(key)}">Create ${nl.length} runs, one per planting date</button></div>` : ""}
     ${l.map(i => gapRow(g, i, key)).join("")}</details>`; }).join("") : `<p class="k">${URG ? "Nothing is due to sow soon without a run." : FILTER ? "Every planned date for this crop has a run." : "Every planned date has a run."}</p>`}`;
+  $("gh").ontoggle = e => { HELPOPEN = e.target.open; };
 }
 function noRunNote() {   // trays that are planned for the room on day T but have no run yet (not counted in the occupancy figure)
   if (!B.gaps) return "";
