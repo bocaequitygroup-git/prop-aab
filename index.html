@@ -153,7 +153,9 @@ function crops() {
 }
 const grp = key => B.gaps && B.gaps.groups.find(g => g.crop + "|" + g.platform === key);
 const gapSow = (g, d) => add(d, -g.lead), gapLive = i => T < i.date;   // a gap whose planting date has passed is listed but never raises a queue item
-function gapList(g) { return g.items.map(i => ({...i, sow: gapSow(g, i.date)})).filter(i => !URG || (gapLive(i) && days(T, i.sow) <= 30)); }
+let GF = {from: "", to: "", by: "sow"}, GJOBS = [];   // date-range filter for Planned, no run (by sow or planting date) and the runs a batch would create
+const gapIn = i => { const k = GF.by === "plant" ? i.date : i.sow; return (!GF.from || k >= GF.from) && (!GF.to || k <= GF.to); };
+function gapList(g) { return g.items.map(i => ({...i, sow: gapSow(g, i.date)})).filter(i => (!URG || (gapLive(i) && days(T, i.sow) <= 30)) && gapIn(i)); }
 function gapRow(g, i, key) {
   const d = days(T, i.sow), live = gapLive(i), why = !live ? "Plant date passed" : d < 0 ? `Sow date passed ${-d} d ago` : d === 0 ? "Sow today" : `Sow in ${d} d`,
     nr = i.near ? ` · run ${esc(i.near.runId)} already has a wave ${Math.abs(i.near.days)} d ${i.near.days < 0 ? "before" : "after"} this (${fmt(i.near.date)})` : "";
@@ -164,6 +166,7 @@ function gaps() {
   if (!B.gaps) { el.innerHTML = `<h2>Planned, no run</h2><div class="note">The server did not send the season plan. Deploy the latest Code_pro.gs as a new version, then press Refresh.</div>`; return; }
   const gs = B.gaps.groups.filter(g => !FILTER || g.crop === FILTER).map(g => ({g, l: gapList(g)})).filter(x => x.l.length),
     total = gs.reduce((n, x) => n + x.l.length, 0), live = gs.reduce((n, x) => n + x.l.filter(gapLive).length, 0);
+  const jobs = GJOBS = gs.flatMap(({g, l}) => g.error ? [] : l.filter(gapLive).map(i => ({g, d: i.date, sow: i.sow}))).sort((a, b) => a.sow < b.sow ? -1 : a.sow > b.sow ? 1 : 0);
   el.innerHTML = `<h2>Planned, no run</h2>
   <details class="help" id="gh" ${HELPOPEN ? "open" : ""}><summary>How Create run works</summary>
     <p><b>Planned, no run</b> means the date is in the season plan, but no run has been saved for it. It is not an approval step. The room, bed, tray type and tray count already come from the plan, so a run is not "waiting for a location".</p>
@@ -178,6 +181,10 @@ function gaps() {
   </details>
   <p class="k">Planting dates in Planting_Plan and GH_Waves that no saved run lands on (matched by exact planting date): ${B.gaps.planned - B.gaps.covered} of ${B.gaps.planned} planned dates this season. Create a run from any of them.</p>
   <label class="k chk"><input type="checkbox" id="urg" ${URG ? "checked" : ""}> Only sow dates within 30 days of ${fmt(T)}, or already passed</label>
+  <div class="row"><label class="k">Date range, from <input type="date" id="gf" value="${GF.from}"></label><label class="k">to <input type="date" id="gt" value="${GF.to}"></label>
+    <label class="k">by <select id="gb"><option value="sow" ${GF.by === "sow" ? "selected" : ""}>sow date</option><option value="plant" ${GF.by === "plant" ? "selected" : ""}>planting date</option></select></label>
+    ${GF.from || GF.to ? `<button type="button" class="alt" data-gclr="1">Clear dates</button>` : ""}</div>
+  <div class="row"><button type="button" data-mkb="1" ${jobs.length ? "" : "disabled"}>Create ${jobs.length} run${jobs.length === 1 ? "" : "s"} listed below</button><span class="k">One wave per run, most urgent sow date first. Dates whose planting date has already passed are left out.</span></div>
   <p><b>${total}</b> shown${FILTER ? " for this crop" : ""}${total > live ? `, ${total - live} with a planting date that has already passed` : ""}.</p>
   ${gs.length ? gs.map(({g, l}) => { const key = g.crop + "|" + g.platform, nl = l.filter(gapLive), past = l.length - nl.length,
     facts = [g.location, g.bed && "bed " + g.bed, g.error ? "" : g.direct ? "direct-seeded, no trays" : (g.trays || 0) + " trays per wave" + (g.trayCells ? ", " + g.trayCells + "-cell" : ""), g.window && "Oregon window " + g.window].filter(Boolean).map(esc).join(" · ");
@@ -192,6 +199,19 @@ function noRunNote() {   // trays that are planned for the room on day T but hav
   if (!B.gaps) return "";
   const hit = B.gaps.groups.filter(g => !g.error && g.trays > 0).map(g => ({g, n: g.items.filter(i => gapSow(g, i.date) <= T && T < i.date).length})).filter(x => x.n), trays = hit.reduce((n, x) => n + x.n * x.g.trays, 0);
   return trays ? `<p class="k"><span class="badge s-gap">Planned, no run</span> ${trays} more trays are planned for the room on this day (${hit.map(x => esc(x.g.cropName) + (x.n > 1 ? " ×" + x.n : "")).join(", ")}). They are not in the count above.</p>` : "";
+}
+async function mkMany(jobs) {   // a batch: one saveRun per job, in order, one at a time. It stops at the first failure and keeps what was already created.
+  if (!jobs.length) return;
+  const btns = document.querySelectorAll("button"); btns.forEach(b => b.disabled = true); let made = 0;
+  try {
+    for (const {g, d} of jobs) {
+      toast(`Creating run ${made + 1} of ${jobs.length}: ${g.cropName} (${pf(g.platform)}), plant ${fmt(d)}… do not close this page`);
+      await post({action:"saveRun", crop:g.crop, platform:g.platform, dob:d, waves:1, noDup:true, user:user() || "manager"});
+      made++; g.items = g.items.filter(x => x.date !== d); B.gaps.covered++;
+    }
+    toast(made + " run" + (made > 1 ? "s" : "") + " created. Next: assign the gate activities, then initiate the waves.");
+  } catch (e) { toast((made ? made + " of " + jobs.length + " created, then stopped: " : "") + e.message, true); }
+  finally { B.gaps.groups = B.gaps.groups.filter(x => x.items.length); btns.forEach(b => b.disabled = false); render(); load(true); }
 }
 async function mkRuns(key, dates) {   // one saveRun per planting date (1 wave each), sequential so progress is visible and a failure stops cleanly
   const g = grp(key); if (!g || !dates.length) return;
@@ -592,6 +612,12 @@ function showPanel(btn, onOpen) {
 $("qb").onclick = () => showPanel("qb");
 $("cb").onclick = () => showPanel("cb");
 $("room").addEventListener("click", e => { const c = e.target.closest("[data-rf]"); if (c) { RF = c.dataset.rf; TRAY = null; room(); } });
+$("gaps").addEventListener("change", e => { const id = e.target.id; if (id === "gf") GF.from = e.target.value; else if (id === "gt") GF.to = e.target.value; else if (id === "gb") GF.by = e.target.value; else return; gaps(); });
+$("gaps").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.gclr) { GF.from = GF.to = ""; gaps(); }
+  else if (b.dataset.mkb) { const n = GJOBS.length; if (!n) return;
+    const rg = GF.from || GF.to ? `\nDate range: ${GF.from ? fmt(GF.from) : "start"} to ${GF.to ? fmt(GF.to) : "end"} (by ${GF.by === "plant" ? "planting" : "sow"} date)` : "";
+    if (confirm(`Create ${n} run${n > 1 ? "s" : ""}, one wave each?${rg}\n\nEach takes several seconds up to a minute, so ${n > 10 ? "this can take several minutes. Keep this page open." : "this may take a minute or two."} If one fails the batch stops and the runs already made are kept. Runs cannot be deleted from the board.`)) mkMany(GJOBS.slice()); } });
 $("mb").onclick = () => showPanel("mb", () => { if (MG) mgr(); loadMgr(true); });
 $("lb").onclick = () => showPanel("lb", el => { if (LAB) labor(); else { el.innerHTML = `<p class="k">Loading labor hours…</p>`; loadLab(); } });
 document.addEventListener("change", e => { if (e.target.id === "lf" || e.target.id === "lt") { LB[e.target.id === "lf" ? "from" : "to"] = e.target.value || LB[e.target.id === "lf" ? "from" : "to"]; LB.show = ""; labor(); } });
