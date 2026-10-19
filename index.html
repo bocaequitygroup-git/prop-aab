@@ -151,15 +151,15 @@ function gaps() {
     total = gs.reduce((n, x) => n + x.l.length, 0), live = gs.reduce((n, x) => n + x.l.filter(gapLive).length, 0);
   el.innerHTML = `<h2>Planned, no run</h2>
   <details class="help" id="gh" ${HELPOPEN ? "open" : ""}><summary>How Create run works</summary>
-    <p><b>Planned, no run</b> means the date is in the season plan but nothing has been set up to do the work yet. It is not an approval step, and the location, bed and tray count are already known from the plan.</p>
+    <p><b>Planned, no run</b> means the date is in the season plan, but no run has been saved for it. It is not an approval step. The room, bed, tray type and tray count already come from the plan, so a run is not "waiting for a location".</p>
     <ol>
-      <li><b>Create run.</b> Makes a run with one wave for that planting date. The wave starts as <i>Not initiated</i>. No activities exist yet and no one has been given any work.</li>
-      <li><b>Initiate.</b> Adds the full activity list for the wave so you can hand the activities out. Do this in Crops and waves, or from the Assignment queue.</li>
-      <li><b>Assign.</b> Open the wave, tick activities and workers, set an optional due date, and press Assign. Workers only see work after this step.</li>
-      <li><b>Verify.</b> Required gate activities must be completed by a worker and verified by you (or overridden with a written reason) before the wave counts as cleared to sow.</li>
+      <li><b>Create run.</b> Saves a run with one wave for that planting date (status <i>Not ready</i>). For crops raised in the propagation room it also adds the 6 <b>gate activities</b>: ACT-101 to 105 (media, hopper, tray staging, seeder calibration) and ACT-607 (bench sanitizing). They start unassigned. Direct-seeded crops have no gates.</li>
+      <li><b>Assign the gates.</b> Open the wave, tick the gate activities and the workers, set an optional due date and press Assign. This can be done straight away, before initiating. Workers see their tasks in the worker app.</li>
+      <li><b>Initiate.</b> Marks the wave initiated and adds the remaining activities (Phase 2 to 6: seeding, germination, grow-out, hardening, delivery). They stay <i>locked</i> until the gates are cleared. Initiate before the sow date, or the board shows <i>Overdue: not initiated</i>.</li>
+      <li><b>Verify.</b> A worker completes each gate and you verify it (or override it with a written reason). When every gate is cleared the run changes to <i>Ready</i> and the locked activities open.</li>
     </ol>
-    <p><b>When is a tray ready to sow?</b> When the run exists, the wave is initiated, and its gate activities are verified. The sow date shows when sowing should happen. The wave turns red (<i>Gate activities unverified</i>) if it reaches that date with gates still open.</p>
-    <p class="k">Only plantings due to sow within 14 days appear in the Assignment queue. Runs cannot be deleted from the board, so create only the ones you need. Creating a run takes several seconds, and initiating takes 10 to 20 seconds.</p>
+    <p><b>When is a tray ready for sowing?</b> When all gate activities are completed and verified (or overridden). At that point the run shows <i>Ready</i> and Phase 2 (tray filling, dibbling, sowing) unlocks. The sow date only says when it should happen. If it passes with gates still open, the wave turns red: <i>Gate activities unverified</i>.</p>
+    <p class="k">A worker starting a task must scan the zone QR code (the propagation room for nursery crops). Only plantings due to sow within 14 days appear in the Assignment queue. Runs cannot be deleted from the board, so create only the ones you need. Creating takes several seconds and initiating takes 10 to 20 seconds.</p>
   </details>
   <p class="k">Planting dates in Planting_Plan and GH_Waves that no saved run lands on (matched by exact planting date): ${B.gaps.planned - B.gaps.covered} of ${B.gaps.planned} planned dates this season. Create a run from any of them.</p>
   <label class="k chk"><input type="checkbox" id="urg" ${URG ? "checked" : ""}> Only sow dates within 30 days of ${fmt(T)}, or already passed</label>
@@ -187,7 +187,7 @@ async function mkRuns(key, dates) {   // one saveRun per planting date (1 wave e
       await post({action:"saveRun", crop:g.crop, platform:g.platform, dob:d, waves:1, noDup:true, user:user() || "manager"});
       made++; g.items = g.items.filter(x => x.date !== d); B.gaps.covered++;
     }
-    toast(made + " run" + (made > 1 ? "s" : "") + " created. Initiate the waves to hand out activities.");
+    toast(made + " run" + (made > 1 ? "s" : "") + " created. Next: assign the gate activities, then initiate the wave.");
   } catch (e) { toast((made ? made + " created, then stopped: " : "") + e.message, true); }
   finally { B.gaps.groups = B.gaps.groups.filter(x => x.items.length); btns.forEach(b => b.disabled = false); render(); load(true); }
 }
@@ -372,7 +372,7 @@ function prof() {
   <div><span class="k">Platform · days before DOB</span><b>${pf(r.platform)} · ${r.preDobDays}</b></div><div><span class="k">Run</span><b>${esc(r.runId)}${r.runType === "ADDITIONAL" ? " (unplanned)" : ""}</b></div>
   <div><span class="k">Gate activities verified</span><b>${r.acts.gates ? r.acts.gatesOk + " of " + r.acts.gates : "None required"}</b></div>
   <div><span class="k">Initiated</span><b>${w.init ? esc(w.init.by) + ", " + new Date(w.init.at).toLocaleDateString() : "Not yet"}</b></div></div>
-  ${w.init ? "" : `<div class="row"><button type="button" data-init="${esc(r.runId)}|${w.wave}">Initiate this wave</button><span class="k">Adds every activity for the run so you can hand them out.</span></div>`}
+  ${w.init ? "" : `<div class="row"><button type="button" data-init="${esc(r.runId)}|${w.wave}">Initiate this wave</button><span class="k">Adds the seeding, growing and delivery activities (Phase 2 to 6). They unlock once the gates are verified.</span></div>`}
   ${(w.phases || []).length ? `<h3>Propagation phases</h3><table><tr><th>Phase</th><th>Days</th><th>Starts</th><th>Ends</th></tr>${w.phases.map(p => `<tr class="${p.start <= T && T < p.end ? "cur" : ""}"><td>${esc(p.phase)}</td><td>${p.days}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td></tr>`).join("")}</table>` : ""}
   <h3>Activities</h3><p class="k">Activities are shared by every wave of run ${esc(r.runId)}. Verify and override are recorded under the name you signed in with.</p>${acts(rs, r)}`;
   updAssign(); if (!rs && !LOADING[r.runId]) loadRun(r.runId);
