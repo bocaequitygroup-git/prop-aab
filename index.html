@@ -448,11 +448,14 @@ function prof() {
   updAssign(); if (!rs && !LOADING[r.runId]) loadRun(r.runId);
 }
 const PICK = new Set(), WPICK = new Set();
+const KINDS = {ASSIGN:"Assigned", REASSIGN:"Reassigned", UNASSIGN:"Removed"};
+function reasgn() { const rs = SEL && RS[SEL.runId]; return rs ? rs.activities.filter(a => PICK.has(a.id) && a.assignee && [...WPICK].sort().join(";") !== (a.assigneeIds || []).map(String).sort().join(";")) : []; }
 function byWorker(rs) {
   const m = {}; rs.activities.forEach(a => { if (a.assignee) String(a.assignee).split(/;\s*/).forEach(n => (m[n] = m[n] || []).push(a.id)); }); const e = Object.entries(m);
   return e.length ? `<h3>By worker</h3>${e.map(([n, l]) => `<div class="ar"><b>${esc(n)}</b><span class="k">${l.length} activit${l.length > 1 ? "ies" : "y"}: ${l.map(esc).join(", ")}</span></div>`).join("")}` : "";
 }
 function updAssign() { const b = $("asg"); if (!b) return; const a = PICK.size, w = WPICK.size;
+  const nb = $("asnote"); if (nb) nb.classList.toggle("hidden", !reasgn().length);
   b.disabled = !(a && w); b.textContent = a && w ? `Assign ${a} activit${a > 1 ? "ies" : "y"} to ${w} worker${w > 1 ? "s" : ""}` : "Assign"; $("asgn").textContent = `${a} activit${a === 1 ? "y" : "ies"} and ${w} worker${w === 1 ? "" : "s"} ticked`; }
 function actRow(a, run) {
   const gate = a.scope !== "crop-wave", k = run + a.id, bits = [], ctl = [];
@@ -462,7 +465,7 @@ function actRow(a, run) {
   if (a.completed && !a.verified && !a.overridden) ctl.push(`<div class="row"><input type="text" data-vnote="${esc(a.id)}" placeholder="Verification notes (optional)" value="${esc(DRAFT["n" + k] || "")}" aria-label="Verification notes for ${esc(a.id)}"><button type="button" data-verify="${esc(a.id)}">Verify</button></div>`);
   if (!a.completed) ctl.push(`<details><summary>Direct close</summary><p class="k">Marks it done without a worker session. The reason is logged.</p><div class="row"><input type="text" data-cwhy="${esc(a.id)}" placeholder="Reason (required)" aria-label="Reason for closing ${esc(a.id)}">${a.requiresCount ? `<input type="number" min="0" step="any" data-cqty="${esc(a.id)}" placeholder="Qty" style="width:80px"><input type="text" data-cunit="${esc(a.id)}" placeholder="Unit" style="width:80px">` : ""}<button type="button" class="alt" data-dc="${esc(a.id)}">Close it</button></div></details>`);
   if (gate && !a.verified && !a.overridden) ctl.push(`<details><summary>Manager override</summary><div class="row"><input type="text" data-why="${esc(a.id)}" placeholder="Reason (required)" value="${esc(DRAFT["w" + k] || "")}" aria-label="Override reason for ${esc(a.id)}"><button type="button" class="alt" data-override="${esc(a.id)}">Override gate</button></div></details>`);
-  return `<div class="act"><label class="ar"><input type="checkbox" data-pick="${esc(a.id)}" ${PICK.has(a.id) ? "checked" : ""}><span class="n"><b>${esc(a.id)}</b> ${esc(a.name)}${gate ? ' <span class="badge s-exc">required gate</span>' : ""}</span><span class="k">${esc(statusOf(a))}${a.assignee ? " · " + esc(String(a.assignee).replace(/;\s*/g, ", ")) : ""}${a.locked ? " · locked until the gates are cleared" : ""}</span></label>${bits.length ? `<div class="d">${bits.join("<br>")}</div>` : ""}${ctl.join("")}</div>`;
+  return `<div class="act"><label class="ar"><input type="checkbox" data-pick="${esc(a.id)}" ${PICK.has(a.id) ? "checked" : ""}><span class="n"><b>${esc(a.id)}</b> ${esc(a.name)}${gate ? ' <span class="badge s-exc">required gate</span>' : ""}</span><span class="k">${esc(statusOf(a))}${a.assignee ? " · " + esc(String(a.assignee).replace(/;\s*/g, ", ")) : ""}${a.locked ? " · locked until the gates are cleared" : ""}</span></label>${a.description ? `<div class="d k">${esc(a.description)}</div>` : ""}${bits.length ? `<div class="d">${bits.join("<br>")}</div>` : ""}${(a.history || []).length ? `<details><summary>Trail (${a.history.length})</summary>${a.history.slice().reverse().map(h => `<div class="k">${when(h.at)} · ${esc(KINDS[h.kind] || h.kind)}${h.from ? " from " + esc(h.from) : ""}${h.to ? " to " + esc(h.to) : ""} · by ${esc(h.by)}${h.note ? " · Note: " + esc(h.note) : ""}</div>`).join("")}</details>` : ""}${ctl.join("")}</div>`;
 }
 async function actVerify(id, b) {
   const run = SEL.runId, k = run + id;
@@ -486,8 +489,9 @@ function acts(rs, r) {
   + PH.map(([ph, l], i) => `<details ${l.some(a => !a.assignee) ? "open" : ""}><summary>${esc(ph)} · ${l.filter(a => a.assignee).length} of ${l.length} assigned</summary><div class="row" style="margin:4px 0"><button class="alt" type="button" data-pall="${i}">Tick or clear this phase</button></div>
     ${l.map(a => actRow(a, r.runId)).join("")}</details>`).join("")
   + `<h3>Workers</h3>${B.workers.length ? `<div class="team">${B.workers.map(x => `<label><input type="checkbox" data-wk="${esc(x.id)}" ${WPICK.has(x.id) ? "checked" : ""}> ${esc(x.name)} <span class="k">${esc(x.role)}</span></label>`).join("")}</div>` : `<p class="k">No active workers found in USERS.</p>`}
+  <div class="row hidden" id="asnote"><input type="text" maxlength="300" data-anote="1" value="${esc(DRAFT["an" + r.runId] || "")}" placeholder="Reassignment note (required): why is this changing?" aria-label="Reassignment note"></div>
   <div class="row"><label class="k">Due date (optional) <input type="date" id="due"></label><button type="button" id="asg" data-assign="1" disabled>Assign</button><span class="k" id="asgn"></span></div>
-  <p class="k">Tick any activities and any workers. Every ticked worker joins the team on every ticked activity, so one worker can take many activities and one activity can have several workers. Ticking an already assigned activity replaces its team.</p>${byWorker(rs)}`;
+  <p class="k">Tick any activities and any workers. Every ticked worker joins the team on every ticked activity, so one worker can take many activities and one activity can have several workers. Ticking an already assigned activity replaces its team: a short note is required and the trail shows from, to, by and the note.</p>${byWorker(rs)}`;
 }
 const LOADING = {}, QI = [];
 async function loadRun(id) { LOADING[id] = 1; try { RS[id] = await get({action:"run", runId:id}); } catch (e) { RS[id] = {activities: []}; toast(e.message, true); } delete LOADING[id]; prof(); }
@@ -523,7 +527,7 @@ document.addEventListener("change", e => { const t = e.target.dataset || {};
   if (t.wk) { e.target.checked ? WPICK.add(t.wk) : WPICK.delete(t.wk); updAssign(); }
   if (e.target.id === "urg") { URG = e.target.checked; gaps(); } });
 document.addEventListener("input", e => { const t = e.target.dataset || {}, r = SEL && SEL.runId;
-  if (t.vnote) DRAFT["n" + r + t.vnote] = e.target.value; if (t.why) DRAFT["w" + r + t.why] = e.target.value; });
+  if (t.anote) DRAFT["an" + r] = e.target.value; if (t.vnote) DRAFT["n" + r + t.vnote] = e.target.value; if (t.why) DRAFT["w" + r + t.why] = e.target.value; });
 document.addEventListener("toggle", e => { const k = e.target.dataset && e.target.dataset.g; if (k) e.target.open ? OPENG.add(k) : OPENG.delete(k); }, true);
 document.addEventListener("click", async e => {
   const b = e.target.closest("button"); if (!b) return; const d = b.dataset, rs = SEL && RS[SEL.runId];
@@ -563,8 +567,10 @@ document.addEventListener("click", async e => {
   else if (d.verify) actVerify(d.verify, b);
   else if (d.override) actOverride(d.override, b);
   else if (d.assign) {
-    const id = SEL.runId, n = PICK.size; b.disabled = true; toast(`Assigning ${n} activit${n > 1 ? "ies" : "y"}… this can take up to a minute`);
-    try { RS[id] = await post({action:"assign", runId:id, activityIds:[...PICK], workerIds:[...WPICK], due:$("due").value, user:user()}); PICK.clear(); toast("Assigned"); prof(); load(true); }
+    const id = SEL.runId, n = PICK.size, chg = reasgn(), note = (DRAFT["an" + id] || "").trim();
+    if (chg.length && !note) return toast("Write a short note explaining the reassignment first. It is required and is kept in the trail.", true);
+    b.disabled = true; toast(`Assigning ${n} activit${n > 1 ? "ies" : "y"}… this can take up to a minute`);
+    try { RS[id] = await post({action:"assign", runId:id, activityIds:[...PICK], workerIds:[...WPICK], due:$("due").value, note:chg.length ? note : "", user:user()}); PICK.clear(); delete DRAFT["an" + id]; toast("Assigned"); prof(); load(true); }
     catch (x) { toast(x.message, true); prof(); }
   }
 });
