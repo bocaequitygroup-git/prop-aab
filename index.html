@@ -9,7 +9,7 @@
 header{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
 h1{font-size:20px;margin:0}h2{font-size:16px;margin:0 0 8px}h3{font-size:14px;margin:14px 0 6px}.k{color:var(--mute);font-size:13px}.sp{flex:1}
 input,select,button{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-height:36px}
-button{background:var(--acc);color:var(--bg);border:0;font-weight:600;cursor:pointer}button.alt{background:var(--bg);color:var(--ink);border:1px solid var(--line)}button:disabled{opacity:.5;cursor:wait}
+button{background:var(--acc);color:var(--bg);border:0;font-weight:600;cursor:pointer}button.alt[aria-pressed=true]{background:var(--acc);color:var(--bg)}button.alt{background:var(--bg);color:var(--ink);border:1px solid var(--line)}button:disabled{opacity:.5;cursor:wait}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .conn{font-size:13px;padding:3px 10px;border-radius:99px;background:var(--accs);color:var(--acc);font-weight:600}.conn.off{background:var(--warns);color:var(--warn)}
 .leg{display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 16px;font-size:13px;color:var(--mute)}.leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
@@ -474,7 +474,7 @@ document.addEventListener("click", async e => {
   else if (d.cm !== undefined) { if (d.cm === "0") { CM = localToday().slice(0, 7); } else { const y = +CM.slice(0, 4), m = +CM.slice(5, 7) - 1 + +d.cm, x = new Date(Date.UTC(y, m, 1)); CM = x.toISOString().slice(0, 7); } CD = null; calendar(); }
   else if (d.cd) { CD = d.cd; CM = d.cd.slice(0, 7); CV = "month"; calendar(); }
   else if (d.tload) loadTeam();
-  else if (d.tclose) { $("team").classList.add("hidden"); TNOTE = ""; }
+  else if (d.tclose) { $("team").classList.add("hidden"); $("tb").setAttribute("aria-pressed", "false"); TNOTE = ""; }
   else if (d.tadd) { const nm = $("tn").value.trim(), wp = $("tp").value.trim();
     if (!nm) return toast("Type the worker's name.", true);
     if (wp && !/^\d{4,8}$/.test(wp)) return toast("The PIN must be 4 to 8 digits, or leave it blank to generate one.", true);
@@ -482,7 +482,7 @@ document.addEventListener("click", async e => {
   else if (d.treset) { const w = TM && TM.workers.find(x => x.id === d.treset);
     if (w && confirm(`Reset the PIN for ${w.name} (${w.id})?\n\nTheir current PIN stops working at the next sign-in and a new one is generated. It is shown once.`)) teamAct({action:"resetPin", workerId:d.treset}, b); }
   else if (d.lload !== undefined) { LAB = null; loadLab(); }
-  else if (d.lclose !== undefined) $("lab").classList.add("hidden");
+  else if (d.lclose !== undefined) { $("lab").classList.add("hidden"); $("lb").setAttribute("aria-pressed", "false"); }
   else if (d.lshow) { LB.show = d.lshow; labPreset(); labor(); }
   else if (d.lview) { LB.view = d.lview; labor(); }
   else if (d.lcsv !== undefined) labCsv();
@@ -497,11 +497,22 @@ document.addEventListener("click", async e => {
     catch (x) { toast(x.message, true); prof(); }
   }
 });
-$("qb").onclick = () => $("qp").classList.toggle("hidden");
-$("cb").onclick = () => $("cal").classList.toggle("hidden");
-$("lb").onclick = () => { const el = $("lab"); el.classList.toggle("hidden"); if (!el.classList.contains("hidden")) { if (LAB) labor(); else { el.innerHTML = `<p class="k">Loading labor hours…</p>`; loadLab(); } } };
+/* Menu panels: one open at a time, and the panel scrolls into view under the sticky header so the click is always visible. Clicking an open panel's button closes it. */
+const PANELS = {qb: "qp", cb: "cal", tb: "team", lb: "lab"};
+function showPanel(btn, onOpen) {
+  const el = $(PANELS[btn]), opening = el.classList.contains("hidden");
+  Object.keys(PANELS).forEach(b => { $(PANELS[b]).classList.add("hidden"); $(b).setAttribute("aria-pressed", "false"); });
+  if (!opening) return;
+  el.classList.remove("hidden"); $(btn).setAttribute("aria-pressed", "true");
+  if (onOpen) onOpen(el);
+  el.style.scrollMarginTop = (document.querySelector("header").offsetHeight + 10) + "px";
+  requestAnimationFrame(() => el.scrollIntoView({behavior: "smooth", block: "start"}));
+}
+$("qb").onclick = () => showPanel("qb");
+$("cb").onclick = () => showPanel("cb");
+$("lb").onclick = () => showPanel("lb", el => { if (LAB) labor(); else { el.innerHTML = `<p class="k">Loading labor hours…</p>`; loadLab(); } });
 document.addEventListener("change", e => { if (e.target.id === "lf" || e.target.id === "lt") { LB[e.target.id === "lf" ? "from" : "to"] = e.target.value || LB[e.target.id === "lf" ? "from" : "to"]; LB.show = ""; labor(); } });
-$("tb").onclick = () => { const el = $("team"); el.classList.toggle("hidden"); if (!el.classList.contains("hidden")) { team(); if (!TM) loadTeam(); else el.scrollIntoView({behavior:"smooth", block:"nearest"}); } };
+$("tb").onclick = () => showPanel("tb", () => { team(); if (!TM) loadTeam(); });
 $("refresh").onclick = () => { RS = {}; CAL = null; toast("Refreshing…"); load(); };
 const sget = () => { try { return JSON.parse(localStorage.getItem("board_session") || "null"); } catch (e) { return null; } };
 const sput = v => { try { v ? localStorage.setItem("board_session", JSON.stringify(v)) : localStorage.removeItem("board_session"); } catch (e) {} };
