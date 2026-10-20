@@ -9,7 +9,7 @@
 header{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
 h1{font-size:20px;margin:0}h2{font-size:16px;margin:0 0 8px}h3{font-size:14px;margin:14px 0 6px}.k{color:var(--mute);font-size:13px}.sp{flex:1}
 input,select,button{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-height:36px}
-button{background:var(--acc);color:var(--bg);border:0;font-weight:600;cursor:pointer}button.alt[aria-pressed=true]{background:var(--acc);color:var(--bg)}button.alt{background:var(--bg);color:var(--ink);border:1px solid var(--line)}button:disabled{opacity:.5;cursor:wait}
+button{background:var(--acc);color:var(--bg);border:0;font-weight:600;cursor:pointer}button.alt{background:var(--bg);color:var(--ink);border:1px solid var(--line)}button:disabled{opacity:.5;cursor:wait}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .conn{font-size:13px;padding:3px 10px;border-radius:99px;background:var(--accs);color:var(--acc);font-weight:600}.conn.off{background:var(--warns);color:var(--warn)}
 .leg{display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 16px;font-size:13px;color:var(--mute)}.leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
@@ -33,7 +33,7 @@ label.ar{cursor:pointer}label.ar input,.team input{min-height:0;width:18px;heigh
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}.grid div{border:1px solid var(--line);border-radius:8px;padding:8px 10px}.grid b{display:block}
 table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--mute);font-size:13px}tr.cur td{background:var(--accs);font-weight:600}
 .ar{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:5px 0;border-bottom:1px dashed var(--line);font-size:14px}.ar .n{flex:1;min-width:180px}
-#mgr .kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:8px 0}#mgr .kp div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}#mgr .kp b{display:block;font-size:22px}#mgr .kp .hot{border-color:var(--warn);background:var(--warns)}.t.post{background-image:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.35) 3px 5px)}.t.dim{opacity:.18}.s-post{border-left-color:var(--warn)!important}details.help{background:var(--accs);border-color:transparent}details.help ol{margin:6px 0 6px 20px;padding:0}details.help li,details.help p{margin:5px 0;font-size:14px;line-height:1.45}details{margin:6px 0;border:1px solid var(--line);border-radius:8px;padding:6px 10px}summary{cursor:pointer;font-weight:600}.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+details{margin:6px 0;border:1px solid var(--line);border-radius:8px;padding:6px 10px}summary{cursor:pointer;font-weight:600}.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
 .q{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}.q .n{flex:1;min-width:200px}
 .pri{font-weight:700;font-size:12px;padding:2px 8px;border-radius:5px}.pri.must{background:var(--bad);color:var(--bg)}.pri.att{background:var(--warns);color:var(--warn)}.pri.rtn{background:var(--accs);color:var(--acc)}
 #toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;z-index:9;max-width:90vw}
@@ -41,6 +41,9 @@ table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:5px 8px;
 .chk{display:flex;gap:8px;align-items:center}.chk input{min-height:0;width:18px;height:18px}
 .act{border-bottom:1px dashed var(--line);padding:4px 0}.act>label.ar{border-bottom:0;padding-bottom:0}.act .d{font-size:13px;color:var(--mute);margin:0 0 4px 28px}.act .row,.act details{margin:4px 0 4px 28px}.act input[type=text]{flex:1;min-width:170px}
 .gl .q:last-child{border-bottom:0}
+.act.cleared{opacity:.5;filter:grayscale(1)}.act.cleared .n b{text-decoration:line-through}
+.gp{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:10px 0}.gp h3{margin:0 0 4px}.gp .gr{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;padding:3px 0;font-size:14px;border-bottom:1px dashed var(--line)}.gp .gr .n{flex:1;min-width:180px}.gp .gr.cleared{opacity:.5;filter:grayscale(1)}
+.gp .rd{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:6px 0}.gp .nx{margin:6px 0 0;padding:6px 10px;border-left:5px solid var(--acc);background:var(--accs);border-radius:4px;font-size:14px}.gp.nr .nx{border-left-color:var(--warn);background:var(--warns)}
 button.on{background:var(--acc);color:var(--bg);border:0}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .cal>div{background:var(--card);min-height:88px;padding:3px 4px;font-size:12px;min-width:0}.cal>.h{min-height:0;color:var(--mute);font-weight:600;text-align:center;padding:5px 0}.cal>.o{background:var(--bg)}.cal>.o .dn{opacity:.5}
@@ -60,10 +63,8 @@ button.on{background:var(--acc);color:var(--bg);border:0}
 <button class="alt" id="cb" type="button">Production calendar</button>
 <button class="alt" id="tb" type="button">Team</button>
 <button class="alt" id="lb" type="button">Labor Hours</button>
-<button class="alt" id="mb" type="button">Manager view</button>
 <span class="k" id="who"></span><button class="alt" id="logout" type="button">Log out</button>
 <button class="alt" id="refresh" type="button">Refresh</button>
-<button class="alt" id="off" type="button">Work offline</button>
 </header>
 <div class="leg"><span><i style="background:var(--mute);opacity:.6"></i>Not initiated</span><span><i style="background:var(--acc);opacity:.45"></i>Initiated</span><span><i style="background:var(--acc)"></i>In propagation</span><span><i style="background:var(--warn)"></i>Needs attention</span><span><i style="background:var(--line)"></i>Planted</span><span><i style="border:1px solid var(--line)"></i>Empty tray</span><span><i style="border:1px dashed var(--mute)"></i>Planned, no run</span></div>
 <div id="login" class="hidden" role="dialog" aria-modal="true" aria-label="Sign in"><div class="card">
@@ -76,7 +77,6 @@ button.on{background:var(--acc);color:var(--bg);border:0}
 <section class="card hidden" id="qp" style="margin:0 16px 14px"></section>
 <section class="card hidden" id="team" style="margin:0 16px 14px"></section>
 <section class="card hidden" id="lab" style="margin:0 16px 14px"></section>
-<section class="card hidden" id="mgr" style="margin:0 16px 14px"></section>
 <section class="card" id="cal" style="margin:0 16px 14px"><p class="k">Loading the production calendar…</p></section>
 <div class="lay">
 <div><section class="card" id="crops"><p class="k">Loading crops and waves…</p></section>
@@ -102,27 +102,20 @@ async function call(url, opt) {
   if (j.error) { if (/^AUTH:/.test(j.error) && TOKEN) signOut("Your session ended. Sign in again."); throw new Error(j.error.replace(/^AUTH:\s*/, "")); } return j;
 }
 const hdr = {"Content-Type":"text/plain;charset=utf-8"};
-async function get(p) {
-  if (OFFLINE) throw new Error("Offline snapshot: press Go live to refresh.");   // reads: signed in, they go out as POST so the session token never sits in a URL
+async function get(p) {   // reads: signed in, they go out as POST so the session token never sits in a URL
   const go = () => TOKEN ? call(API_URL, {method:"POST", headers:hdr, body:JSON.stringify({...p, token:TOKEN})}) : call(API_URL + "?" + new URLSearchParams(p));
   try { return await go(); } catch (e) { if (!/web page/.test(e.message)) throw e; await new Promise(r => setTimeout(r, 1200)); return go(); } }
-let OFFLINE = false;
-const post = b => OFFLINE ? Promise.reject(new Error("Offline snapshot is read-only. Press Go live to make changes.")) : call(API_URL, {method:"POST", headers:hdr, body:JSON.stringify({...b, token:TOKEN})});
+const post = b => call(API_URL, {method:"POST", headers:hdr, body:JSON.stringify({...b, token:TOKEN})});
 
 let B = {runs: [], workers: []}, SEL = null, T = localToday(), RS = {}, FILTER = "", SQ = 1.55, PH = [], URG = false, QALL = false;
 let CAL = null, CL = "prop", CV = "month", CP = "", CM = localToday().slice(0, 7), CD = null;   // production calendar: data, layer, view, platform filter, month, selected day
-let HELPOPEN = false;
 const OPENG = new Set(), DRAFT = {};   // open gap groups, and half-typed verify notes / override reasons (kept across re-renders)
 const when = s => { if (!s) return ""; const d = new Date(String(s).length <= 10 ? s + "T00:00:00" : s); return isNaN(d) ? esc(s) : d.toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"}); };
 const user = () => ME ? ME.name : "";
 function toast(m, bad) { const el = $("toast"); el.textContent = m; el.classList.remove("hidden"); el.style.background = bad ? "var(--bad)" : ""; clearTimeout(toast.t); if (m) toast.t = setTimeout(() => el.classList.add("hidden"), bad ? 6000 : 2500); else el.classList.add("hidden"); }
 const flat = () => B.runs.filter(r => !r.error).flatMap(r => r.waves.map(w => ({r, w})));
-const gateOk = g => (g.completed && g.verified) || g.overridden, postOpen = r => (r.gates || []).some(g => g.scope === "post-transplant" && !gateOk(g));
-const held = (r, w, t) => t >= w.plant && t < add(w.plant, 30) && postOpen(r);   // slot stays held until bench sanitizing (ACT-607) is verified or overridden
-const inRoomNow = (r, w, t) => w.trays > 0 && ((w.sow <= t && t < w.plant) || held(r, w, t));
-let RF = "all";
 function stat(r, w, t) {
-  if (t >= w.plant) return held(r, w, t) ? ["post", "Post-transplant: bench sanitizing not verified"] : ["done", "Planted"];
+  if (t >= w.plant) return ["done", "Planted"];
   const gatesOpen = r.acts.gates > 0 && r.acts.gatesOk < r.acts.gates;
   if (!w.init) return t >= w.sow ? ["exc", "Overdue: not initiated"] : ["prop", `Not initiated · sow in ${days(t, w.sow)} d`];
   if (t < w.sow) return ["init", `Initiated · sow in ${days(t, w.sow)} d`];
@@ -130,17 +123,11 @@ function stat(r, w, t) {
   const ph = (w.phases || []).find(p => p.start <= t && t < p.end);
   return ["occ", r.direct ? "Direct-seeded, growing" : "In propagation" + (ph ? " · " + ph.phase : "")];
 }
-function useSnap(quiet) {
-  let sv = null; try { sv = JSON.parse(localStorage.getItem("pa_snap") || "null"); } catch (e) {}
-  if (!sv || !sv.B || !sv.B.runs) { if (!quiet) toast("No snapshot saved on this device yet. Sync once while online.", true); return false; }
-  B = sv.B; $("conn").textContent = "Offline snapshot · saved " + new Date(sv.t).toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}); $("conn").className = "conn off"; render(); return true;
-}
 async function load(quiet) {
-  if (OFFLINE) return useSnap(true);
-  try { B = await get({action:"board"}); try { localStorage.setItem("pa_snap", JSON.stringify({t: Date.now(), B})); } catch (e) {} $("conn").textContent = "Connected · " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}); $("conn").className = "conn"; $("err").classList.add("hidden"); render(); if (!CAL) loadCal(); }
-  catch (e) { const snap = !B && useSnap(true); if (!snap) { $("conn").textContent = "Offline"; $("conn").className = "conn off"; } $("err").textContent = e.message; $("err").classList.remove("hidden"); if (!quiet) toast(e.message, true); }
+  try { B = await get({action:"board"}); $("conn").textContent = "Connected · " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}); $("conn").className = "conn"; $("err").classList.add("hidden"); render(); if (!CAL) loadCal(); }
+  catch (e) { $("conn").textContent = "Offline"; $("conn").className = "conn off"; $("err").textContent = e.message; $("err").classList.remove("hidden"); if (!quiet) toast(e.message, true); }
 }
-function render() { crops(); gaps(); room(); prof(); queue(); calendar(); if (MG) mgr(); }
+function render() { crops(); gaps(); room(); prof(); queue(); calendar(); }
 function crops() {
   const G = B.gaps ? B.gaps.groups : [], codes = [...new Map([...B.runs.map(r => [r.crop, r.cropName]), ...G.map(g => [g.crop, g.cropName])]).entries()].sort((a, b) => String(a[1]).localeCompare(String(b[1])));
   const runs = B.runs.filter(r => !FILTER || r.crop === FILTER);
@@ -153,9 +140,7 @@ function crops() {
 }
 const grp = key => B.gaps && B.gaps.groups.find(g => g.crop + "|" + g.platform === key);
 const gapSow = (g, d) => add(d, -g.lead), gapLive = i => T < i.date;   // a gap whose planting date has passed is listed but never raises a queue item
-let GF = {from: "", to: "", by: "sow"}, GJOBS = [];   // date-range filter for Planned, no run (by sow or planting date) and the runs a batch would create
-const gapIn = i => { const k = GF.by === "plant" ? i.date : i.sow; return (!GF.from || k >= GF.from) && (!GF.to || k <= GF.to); };
-function gapList(g) { return g.items.map(i => ({...i, sow: gapSow(g, i.date)})).filter(i => (!URG || (gapLive(i) && days(T, i.sow) <= 30)) && gapIn(i)); }
+function gapList(g) { return g.items.map(i => ({...i, sow: gapSow(g, i.date)})).filter(i => !URG || (gapLive(i) && days(T, i.sow) <= 30)); }
 function gapRow(g, i, key) {
   const d = days(T, i.sow), live = gapLive(i), why = !live ? "Plant date passed" : d < 0 ? `Sow date passed ${-d} d ago` : d === 0 ? "Sow today" : `Sow in ${d} d`,
     nr = i.near ? ` · run ${esc(i.near.runId)} already has a wave ${Math.abs(i.near.days)} d ${i.near.days < 0 ? "before" : "after"} this (${fmt(i.near.date)})` : "";
@@ -166,26 +151,9 @@ function gaps() {
   if (!B.gaps) { el.innerHTML = `<h2>Planned, no run</h2><div class="note">The server did not send the season plan. Deploy the latest Code_pro.gs as a new version, then press Refresh.</div>`; return; }
   const gs = B.gaps.groups.filter(g => !FILTER || g.crop === FILTER).map(g => ({g, l: gapList(g)})).filter(x => x.l.length),
     total = gs.reduce((n, x) => n + x.l.length, 0), live = gs.reduce((n, x) => n + x.l.filter(gapLive).length, 0);
-  const jobs = GJOBS = gs.flatMap(({g, l}) => { const nl = l.filter(gapLive).sort((a, b) => a.date < b.date ? -1 : 1); return g.error || !nl.length ? [] : [{g, dates: nl.map(i => i.date), sow: nl[0].sow}]; }).sort((a, b) => a.sow < b.sow ? -1 : a.sow > b.sow ? 1 : 0),
-    nwaves = jobs.reduce((n, j) => n + j.dates.length, 0);
   el.innerHTML = `<h2>Planned, no run</h2>
-  <details class="help" id="gh" ${HELPOPEN ? "open" : ""}><summary>How Create run works</summary>
-    <p><b>Planned, no run</b> means the date is in the season plan, but no run has been saved for it. It is not an approval step. The room, bed, tray type and tray count already come from the plan, so a run is not "waiting for a location".</p>
-    <ol>
-      <li><b>Create run.</b> Saves a run with one wave for that planting date (status <i>Not ready</i>). For crops raised in the propagation room it also adds the 6 <b>gate activities</b>: ACT-101 to 105 (media, hopper, tray staging, seeder calibration) and ACT-607 (bench sanitizing). They start unassigned. Direct-seeded crops have no gates.</li>
-      <li><b>Assign the gates.</b> Open the wave, tick the gate activities and the workers, set an optional due date and press Assign. This can be done straight away, before initiating. Workers see their tasks in the worker app.</li>
-      <li><b>Initiate.</b> Marks the wave initiated and adds the remaining activities (Phase 2 to 6: seeding, germination, grow-out, hardening, delivery). They stay <i>locked</i> until the gates are cleared. Initiate before the sow date, or the board shows <i>Overdue: not initiated</i>.</li>
-      <li><b>Verify.</b> A worker completes each gate and you verify it (or override it with a written reason). When every gate is cleared the run changes to <i>Ready</i> and the locked activities open.</li>
-    </ol>
-    <p><b>When is a tray ready for sowing?</b> When all gate activities are completed and verified (or overridden). At that point the run shows <i>Ready</i> and Phase 2 (tray filling, dibbling, sowing) unlocks. The sow date only says when it should happen. If it passes with gates still open, the wave turns red: <i>Gate activities unverified</i>.</p>
-    <p class="k">A worker starting a task must scan the zone QR code (the propagation room for nursery crops). Only plantings due to sow within 14 days appear in the Assignment queue. Runs cannot be deleted from the board, so create only the ones you need. Creating takes several seconds and initiating takes 10 to 20 seconds.</p>
-  </details>
   <p class="k">Planting dates in Planting_Plan and GH_Waves that no saved run lands on (matched by exact planting date): ${B.gaps.planned - B.gaps.covered} of ${B.gaps.planned} planned dates this season. Create a run from any of them.</p>
   <label class="k chk"><input type="checkbox" id="urg" ${URG ? "checked" : ""}> Only sow dates within 30 days of ${fmt(T)}, or already passed</label>
-  <div class="row"><label class="k">Date range, from <input type="date" id="gf" value="${GF.from}"></label><label class="k">to <input type="date" id="gt" value="${GF.to}"></label>
-    <label class="k">by <select id="gb"><option value="sow" ${GF.by === "sow" ? "selected" : ""}>sow date</option><option value="plant" ${GF.by === "plant" ? "selected" : ""}>planting date</option></select></label>
-    ${GF.from || GF.to ? `<button type="button" class="alt" data-gclr="1">Clear dates</button>` : ""}</div>
-  <div class="row"><button type="button" data-mkb="1" ${jobs.length ? "" : "disabled"}>Create ${jobs.length} run${jobs.length === 1 ? "" : "s"} (${nwaves} wave${nwaves === 1 ? "" : "s"}) listed below</button><span class="k">One run per crop and platform, with a wave for every date listed below. Most urgent sow date first. Dates whose planting date has already passed are left out.</span></div>
   <p><b>${total}</b> shown${FILTER ? " for this crop" : ""}${total > live ? `, ${total - live} with a planting date that has already passed` : ""}.</p>
   ${gs.length ? gs.map(({g, l}) => { const key = g.crop + "|" + g.platform, nl = l.filter(gapLive), past = l.length - nl.length,
     facts = [g.location, g.bed && "bed " + g.bed, g.error ? "" : g.direct ? "direct-seeded, no trays" : (g.trays || 0) + " trays per wave" + (g.trayCells ? ", " + g.trayCells + "-cell" : ""), g.window && "Oregon window " + g.window].filter(Boolean).map(esc).join(" · ");
@@ -194,25 +162,11 @@ function gaps() {
     ${g.error ? `<div class="note">${esc(g.error)}. Runs cannot be created for this crop until that is fixed.</div>` : ""}${(g.notes || []).map(n => `<div class="note">${esc(n)}</div>`).join("")}
     ${!g.error && nl.length > 1 ? `<div class="row"><button type="button" class="alt" data-mkall="${esc(key)}">Create ${nl.length} runs, one per planting date</button></div>` : ""}
     ${l.map(i => gapRow(g, i, key)).join("")}</details>`; }).join("") : `<p class="k">${URG ? "Nothing is due to sow soon without a run." : FILTER ? "Every planned date for this crop has a run." : "Every planned date has a run."}</p>`}`;
-  $("gh").ontoggle = e => { HELPOPEN = e.target.open; };
 }
 function noRunNote() {   // trays that are planned for the room on day T but have no run yet (not counted in the occupancy figure)
   if (!B.gaps) return "";
   const hit = B.gaps.groups.filter(g => !g.error && g.trays > 0).map(g => ({g, n: g.items.filter(i => gapSow(g, i.date) <= T && T < i.date).length})).filter(x => x.n), trays = hit.reduce((n, x) => n + x.n * x.g.trays, 0);
   return trays ? `<p class="k"><span class="badge s-gap">Planned, no run</span> ${trays} more trays are planned for the room on this day (${hit.map(x => esc(x.g.cropName) + (x.n > 1 ? " ×" + x.n : "")).join(", ")}). They are not in the count above.</p>` : "";
-}
-async function mkMany(jobs) {   // a batch: one saveRun per job, in order, one at a time. It stops at the first failure and keeps what was already created.
-  if (!jobs.length) return;
-  const btns = document.querySelectorAll("button"); btns.forEach(b => b.disabled = true); let made = 0;
-  try {
-    for (const {g, dates} of jobs) {
-      toast(`Creating run ${made + 1} of ${jobs.length}: ${g.cropName} (${pf(g.platform)}), ${dates.length} wave${dates.length > 1 ? "s" : ""}, plant ${fmt(dates[0])}${dates.length > 1 ? " to " + fmt(dates[dates.length - 1]) : ""}… do not close this page`);
-      await post({action:"saveRun", crop:g.crop, platform:g.platform, dob:dates[0], dates, waves:dates.length, noDup:true, user:user() || "manager"});
-      made++; g.items = g.items.filter(x => !dates.includes(x.date)); B.gaps.covered += dates.length;
-    }
-    toast(made + " run" + (made > 1 ? "s" : "") + " created. Next: assign the gate activities, then initiate the waves.");
-  } catch (e) { toast((made ? made + " of " + jobs.length + " created, then stopped: " : "") + e.message, true); }
-  finally { B.gaps.groups = B.gaps.groups.filter(x => x.items.length); btns.forEach(b => b.disabled = false); render(); load(true); }
 }
 async function mkRuns(key, dates) {   // one saveRun per planting date (1 wave each), sequential so progress is visible and a failure stops cleanly
   const g = grp(key); if (!g || !dates.length) return;
@@ -223,7 +177,7 @@ async function mkRuns(key, dates) {   // one saveRun per planting date (1 wave e
       await post({action:"saveRun", crop:g.crop, platform:g.platform, dob:d, waves:1, noDup:true, user:user() || "manager"});
       made++; g.items = g.items.filter(x => x.date !== d); B.gaps.covered++;
     }
-    toast(made + " run" + (made > 1 ? "s" : "") + " created. Next: assign the gate activities, then initiate the wave.");
+    toast(made + " run" + (made > 1 ? "s" : "") + " created. Initiate the waves to hand out activities.");
   } catch (e) { toast((made ? made + " created, then stopped: " : "") + e.message, true); }
   finally { B.gaps.groups = B.gaps.groups.filter(x => x.items.length); btns.forEach(b => b.disabled = false); render(); load(true); }
 }
@@ -377,12 +331,8 @@ function trayInfo() {
     <span>Sown ${fmt(w.sow)} · transplants ${fmt(w.plant)} (${days(T, w.plant)} days from ${fmt(T)})</span>
     <span>Goes to: ${esc(r.location)}${r.bed ? ", bed " + esc(r.bed) : ""}</span><span class="k">Room position ${TRAY + 1} of ${CAP} · run ${esc(r.runId)}</span></div>`;
 }
-function roomChips(used, cap) {
-  const n = {all: cap, avail: Math.max(0, cap - used), occ: 0, attn: 0, post: 0}; CELLS.forEach(c => n[c.k === "exc" ? "attn" : c.k === "post" ? "post" : "occ"]++);
-  return `<div class="row">${[["all", "All"], ["avail", "Available"], ["occ", "Occupied"], ["attn", "Needs attention"], ["post", "Post-transplant"]].map(([k, l]) => `<button type="button" class="alt" data-rf="${k}" aria-pressed="${RF === k}">${l} · ${n[k]}</button>`).join("")}</div>`;
-}
 function room() {
-  const cap = CAP = Math.floor(800 / SQ), on = flat().filter(x => inRoomNow(x.r, x.w, T)).sort((a, b) => a.w.sow < b.w.sow ? -1 : a.w.sow > b.w.sow ? 1 : 0);
+  const cap = CAP = Math.floor(800 / SQ), on = flat().filter(x => x.w.trays > 0 && x.w.sow <= T && T < x.w.plant).sort((a, b) => a.w.sow < b.w.sow ? -1 : a.w.sow > b.w.sow ? 1 : 0);
   const cells = []; on.forEach(({r, w}) => { const [k] = stat(r, w, T); for (let i = 1; i <= w.trays; i++) cells.push({r, w, k, i}); });
   CELLS = cells.slice(0, cap); const used = CELLS.length, over = cells.length - cap, by = {}; on.forEach(({r, w}) => by[r.crop] = (by[r.crop] || 0) + w.trays);
   const runs = [...new Map(B.runs.filter(r => !r.error).map(r => [r.crop, r])).values()], pk = busiest();
@@ -393,43 +343,13 @@ function room() {
   <div class="row"><button class="alt" type="button" data-day="-1">Previous day</button><input type="date" id="day" value="${T}"><button class="alt" type="button" data-day="1">Next day</button><button class="alt" type="button" data-day="0">Today</button>${pk ? `<button class="alt" type="button" data-peak="${pk.t}">Busiest day (${pk.n} trays)</button>` : ""}
   <label class="k">Sq ft per tray <input type="number" id="sq" min="0.5" step="0.05" value="${SQ}" style="width:80px"></label></div>
   <p><b>${used}</b> of ${cap} trays occupied on ${fmt(T)} (${Math.round(used / cap * 100)}%) · ${cap - used} empty${over > 0 ? ` · <b style="color:var(--bad)">${over} trays over capacity</b>` : ""}</p>
-  ${noRun}${trayInfo()}${roomChips(used, cap)}
-  <div class="trays">${CELLS.map((c, i) => `<button type="button" class="t ${c.k === "prop" ? "prop" : ""} ${c.k === "exc" ? "exc" : ""} ${c.k === "post" ? "post" : ""} ${i === TRAY ? "sel" : sel.includes(i) ? "wv" : ""}" style="background-color:${col(c.r.crop)}" data-tray="${i}" title="${esc(c.r.cropName)} wave ${c.w.wave}, tray ${c.i} of ${c.w.trays}" aria-label="${esc(c.r.cropName)} wave ${c.w.wave}, tray ${c.i} of ${c.w.trays}">${esc(c.r.crop)}</button>`).join("")}${Array(Math.max(0, cap - CELLS.length)).fill('<div class="t e"></div>').join("")}</div>
-  <div class="k">${leg || "No runs yet."}</div><p class="k">Every crop with a saved run is listed here, including crops not in the room on the day shown. Crops appear once a run is created in the Propagation Engine. Hatched slots are post-transplant: held for 30 days after planting until bench sanitizing (ACT-607) is verified or overridden.</p>`;
-  document.querySelectorAll("#room .trays .t").forEach(b => { if (RF === "all") return; const c = CELLS[+b.dataset.tray], k = !c ? "avail" : c.k === "exc" ? "attn" : c.k === "post" ? "post" : "occ"; if (k !== RF) b.classList.add("dim"); });
+  ${noRun}${trayInfo()}
+  <div class="trays">${CELLS.map((c, i) => `<button type="button" class="t ${c.k === "prop" ? "prop" : ""} ${c.k === "exc" ? "exc" : ""} ${i === TRAY ? "sel" : sel.includes(i) ? "wv" : ""}" style="background-color:${col(c.r.crop)}" data-tray="${i}" title="${esc(c.r.cropName)} wave ${c.w.wave}, tray ${c.i} of ${c.w.trays}" aria-label="${esc(c.r.cropName)} wave ${c.w.wave}, tray ${c.i} of ${c.w.trays}">${esc(c.r.crop)}</button>`).join("")}${Array(Math.max(0, cap - CELLS.length)).fill('<div class="t e"></div>').join("")}</div>
+  <div class="k">${leg || "No runs yet."}</div><p class="k">Every crop with a saved run is listed here, including crops not in the room on the day shown. Crops appear once a run is created in the Propagation Engine.</p>`;
   $("day").onchange = e => { T = e.target.value || T; TRAY = null; render(); };
   $("sq").onchange = e => { SQ = Math.max(0.5, +e.target.value || 1.55); TRAY = null; room(); };
 }
 const statusOf = a => a.overridden ? "Overridden" : a.verified ? "Verified" : a.completed ? "Done, awaiting verification" : a.sessions && a.sessions.length ? "In progress" : a.assignee ? "Assigned" : "Not assigned";
-function leafCard(r, w) {
-  if (r.direct) return `<h3>First-leaf check</h3><p class="k">Not applicable: ${esc(r.cropName)} is direct-seeded or a crown.</p>`;
-  const lf = w.leaf, o = lf ? lf.outcome : "", ph = (w.phases || []).find(p => p.phase === "Nursery" && p.days > 0);
-  return `<h3>First-leaf check · wave ${w.wave} <span class="badge ${o === "PASS" ? "s-occ" : o ? "s-exc" : "s-gap"}">${o === "PASS" ? "✓ Pass" : o === "OVERRIDDEN" ? "! Overridden" : o === "FAIL" ? "✕ Fail" : "○ Pending"}</span></h3>
-  <p class="k">Growth feeds (ACT-402 Fertigation mixing) cannot start for this wave until the outcome is Pass or a manager overrides it.${ph ? " Check is due from " + fmt(ph.start) + " (germination ends)." : ""}${lf ? " Last set " + when(lf.at) + (lf.by ? " by " + esc(lf.by) : "") + (lf.notes ? " · " + esc(lf.notes) : "") : ""}</p>
-  <div class="row"><input type="text" id="lfn" placeholder="Notes (optional)" aria-label="First-leaf notes"><button type="button" data-lf="PASS">Pass</button><button type="button" class="alt" data-lf="FAIL">Fail</button><button type="button" class="alt" data-lf="PENDING">Reset</button></div>
-  ${o === "PASS" || o === "OVERRIDDEN" ? "" : `<details><summary>Override first-leaf check</summary><div class="row"><input type="text" id="lfo" placeholder="Reason (required)" aria-label="Override reason"><button type="button" class="alt" data-lf="OVERRIDDEN">Override</button></div></details>`}`;
-}
-const gateTodo = rs => rs ? rs.activities.filter(a => a.scope !== "crop-wave" && a.completed && !a.verified && !a.overridden) : [];
-const verAll = rs => gateTodo(rs).length ? `<div class="row"><button type="button" data-vall="1">Verify ${gateTodo(rs).length} completed gate step${gateTodo(rs).length > 1 ? "s" : ""}</button></div>` : "";
-$("prof").addEventListener("click", async e => {
-  const b = e.target.closest("button"); if (!b || !SEL) return; const d = b.dataset, r = B.runs.find(x => x.runId === SEL.runId), w = r && r.waves.find(x => x.wave === SEL.wave); if (!w || !(d.lf || d.dc || d.vall)) return;
-  const fin = (rs, m) => { RS[r.runId] = rs; if (rs.leaf) r.waves.forEach(x => x.leaf = rs.leaf[x.wave] || null); toast(m); prof(); load(true); };
-  try {
-    if (d.lf) { const notes = ($(d.lf === "OVERRIDDEN" ? "lfo" : "lfn") || {value: ""}).value.trim();
-      if (d.lf === "OVERRIDDEN" && !notes) return toast("Type the reason for the override first. It is required and is logged.", true);
-      if (d.lf === "OVERRIDDEN" && !confirm(`Override the first-leaf check for ${r.cropName} wave ${w.wave}?\n\nGrowth feeds will start without a Pass. Your reason is logged.`)) return;
-      fin(await post({action: "firstLeaf", runId: r.runId, wave: w.wave, outcome: d.lf, notes}), d.lf === "PENDING" ? "First-leaf check reset" : "First-leaf check: " + d.lf.toLowerCase()); }
-    else if (d.dc) { const bx = b.closest("details"), q = k => bx.querySelector(`[data-${k}="${d.dc}"]`), why = q("cwhy").value.trim(), qt = q("cqty") ? q("cqty").value.trim() : "", un = q("cunit") ? q("cunit").value.trim() : "";
-      if (!why) return toast("Type the reason for the direct close first. It is required and is logged.", true);
-      if (q("cqty") && (!(+qt > 0) || !un)) return toast("This activity needs a quantity and unit.", true);
-      if (!confirm(`Close ${d.dc} on run ${r.runId} without a worker session?\n\nReason: ${why}`)) return;
-      fin(await post({action: "mgrClose", runId: r.runId, activityId: d.dc, wave: w.wave, reason: why, count: qt, unit: un}), "Closed " + d.dc); }
-    else if (d.vall) { const todo = gateTodo(RS[r.runId]);
-      if (!todo.length || !confirm(`Verify ${todo.length} completed gate step${todo.length > 1 ? "s" : ""} as ready?\n\n${todo.map(a => a.id + " " + a.name).join("\n")}\n\nThis is recorded under ${user()}.`)) return;
-      let rs = null, n = 0; for (const a of todo) { toast(`Verifying ${a.id} (${n + 1} of ${todo.length})`); rs = await post({action: "verify", runId: r.runId, activityId: a.id, notes: "Bed verified ready"}); n++; RS[r.runId] = rs; }
-      fin(rs, n + " gate step" + (n > 1 ? "s" : "") + " verified"); }
-  } catch (err) { toast(err.message, true); }
-});
 function prof() {
   const el = $("prof"), r = SEL && B.runs.find(x => x.runId === SEL.runId), w = r && r.waves && r.waves.find(x => x.wave === SEL.wave);
   if (!w) { el.innerHTML = `<h2>Wave profile</h2><p class="k">Select a wave from the list, or a tray on the map, to see its profile and hand out activities.</p>`; return; }
@@ -442,30 +362,52 @@ function prof() {
   <div><span class="k">Platform · days before DOB</span><b>${pf(r.platform)} · ${r.preDobDays}</b></div><div><span class="k">Run</span><b>${esc(r.runId)}${r.runType === "ADDITIONAL" ? " (unplanned)" : ""}</b></div>
   <div><span class="k">Gate activities verified</span><b>${r.acts.gates ? r.acts.gatesOk + " of " + r.acts.gates : "None required"}</b></div>
   <div><span class="k">Initiated</span><b>${w.init ? esc(w.init.by) + ", " + new Date(w.init.at).toLocaleDateString() : "Not yet"}</b></div></div>
-  ${w.init ? "" : `<div class="row"><button type="button" data-init="${esc(r.runId)}|${w.wave}">Initiate this wave</button><span class="k">Adds the seeding, growing and delivery activities (Phase 2 to 6). They unlock once the gates are verified.</span></div>`}
+  ${w.init ? "" : `<div class="row"><button type="button" data-init="${esc(r.runId)}|${w.wave}">Initiate this wave</button><span class="k">Adds every activity for the run so you can hand them out.</span></div>`}
+  ${gatePanel(rs, r, w)}
   ${(w.phases || []).length ? `<h3>Propagation phases</h3><table><tr><th>Phase</th><th>Days</th><th>Starts</th><th>Ends</th></tr>${w.phases.map(p => `<tr class="${p.start <= T && T < p.end ? "cur" : ""}"><td>${esc(p.phase)}</td><td>${p.days}</td><td>${fmt(p.start)}</td><td>${fmt(p.end)}</td></tr>`).join("")}</table>` : ""}
-  ${leafCard(r, w)}${verAll(rs)}<h3>Activities</h3><p class="k">Activities are shared by every wave of run ${esc(r.runId)}. Verify and override are recorded under the name you signed in with.</p>${acts(rs, r)}`;
+  <h3>Activities</h3><p class="k">Activities are shared by every wave of run ${esc(r.runId)}. Verify and override are recorded under the name you signed in with.</p>${acts(rs, r)}`;
   updAssign(); if (!rs && !LOADING[r.runId]) loadRun(r.runId);
 }
 const PICK = new Set(), WPICK = new Set();
-const KINDS = {ASSIGN:"Assigned", REASSIGN:"Reassigned", UNASSIGN:"Removed"};
-function reasgn() { const rs = SEL && RS[SEL.runId]; return rs ? rs.activities.filter(a => PICK.has(a.id) && a.assignee && [...WPICK].sort().join(";") !== (a.assigneeIds || []).map(String).sort().join(";")) : []; }
 function byWorker(rs) {
   const m = {}; rs.activities.forEach(a => { if (a.assignee) String(a.assignee).split(/;\s*/).forEach(n => (m[n] = m[n] || []).push(a.id)); }); const e = Object.entries(m);
   return e.length ? `<h3>By worker</h3>${e.map(([n, l]) => `<div class="ar"><b>${esc(n)}</b><span class="k">${l.length} activit${l.length > 1 ? "ies" : "y"}: ${l.map(esc).join(", ")}</span></div>`).join("")}` : "";
 }
 function updAssign() { const b = $("asg"); if (!b) return; const a = PICK.size, w = WPICK.size;
-  const nb = $("asnote"); if (nb) nb.classList.toggle("hidden", !reasgn().length);
   b.disabled = !(a && w); b.textContent = a && w ? `Assign ${a} activit${a > 1 ? "ies" : "y"} to ${w} worker${w > 1 ? "s" : ""}` : "Assign"; $("asgn").textContent = `${a} activit${a === 1 ? "y" : "ies"} and ${w} worker${w === 1 ? "" : "s"} ticked`; }
+const isGate = a => a.scope !== "crop-wave", cleared = a => isGate(a) && (a.overridden || (a.completed && a.verified));
+const names = l => l.slice(0, 4).map(a => esc(a.id) + " " + esc(a.name)).join(", ") + (l.length > 4 ? ` and ${l.length - 4} more` : "");
+function gatePanel(rs, r, w) {
+  if (!rs || !rs.activities) return "";
+  const g = rs.activities.filter(isGate), ok = g.filter(cleared).length, rest = rs.activities.filter(a => !isGate(a));
+  const ready = !!w.init && (rs.ready || rs.notApplicable), awaiting = rs.activities.filter(a => a.completed && !a.verified && !a.overridden);
+  const gAwait = g.filter(a => a.completed && !a.verified && !a.overridden), gOpen = g.filter(a => !a.completed && !a.overridden);
+  const gFree = gOpen.filter(a => !a.assignee), gBusy = gOpen.filter(a => a.assignee), free = rest.filter(a => !a.assignee);
+  let state, next;
+  if (!w.init) { state = "Not ready to sow: wave not initiated"; next = "Initiate this wave. That adds the required gate activities so you can hand them out."; }
+  else if (!ready) { state = `Not ready to sow: ${ok} of ${g.length} required gates cleared`;
+    next = gAwait.length ? `Verify ${names(gAwait)}. The work is done and is waiting for you.`
+      : gFree.length ? `Assign ${names(gFree)} to workers (tick them below, tick workers, then Assign).`
+      : gBusy.length ? `Wait for workers to finish ${names(gBusy)}. If a gate must not block this run, use Manager override on it.` : "Refresh the board."; }
+  else { const d = days(T, w.sow);
+    state = g.length ? "Ready to sow: all required gates are cleared" : "Ready to sow: no required gates for this run";
+    state += d > 0 ? ` · sow date ${fmt(w.sow)}, in ${d} d` : d === 0 ? " · sow date is today" : ` · sow date ${fmt(w.sow)} has passed`;
+    next = awaiting.length ? `Verify ${names(awaiting)}. The work is done and is waiting for you.`
+      : free.length ? `Assign the ${free.length} unassigned activit${free.length > 1 ? "ies" : "y"} below so sowing can go ahead.`
+      : "Every activity is assigned. Nothing needed from you until workers finish and ask for verification."; }
+  return `<div class="gp ${ready ? "" : "nr"}"><h3>Required gates</h3>
+  <div class="rd"><span class="badge ${ready ? "s-occ" : "s-exc"}">${esc(state)}</span></div>
+  ${g.length ? g.map(a => `<div class="gr ${cleared(a) ? "cleared" : ""}"><span class="n"><b>${esc(a.id)}</b> ${esc(a.name)}</span><span class="k">${a.overridden ? "Overridden" : esc(statusOf(a))}${!cleared(a) && a.assignee ? " · " + esc(String(a.assignee).replace(/;\s*/g, ", ")) : ""}</span></div>`).join("") : `<p class="k" style="margin:2px 0">${w.init ? "None required for this run." : "Appear once the wave is initiated."}</p>`}
+  <div class="nx"><b>Next step for you:</b> ${next}</div></div>`;
+}
 function actRow(a, run) {
-  const gate = a.scope !== "crop-wave", k = run + a.id, bits = [], ctl = [];
+  const gate = a.scope !== "crop-wave", k = run + a.id, bits = [], ctl = [], cl = cleared(a);
   if (a.completed) bits.push(`Completed ${when(a.completedAt)}${a.completedBy ? " by " + esc(a.completedBy) : ""}${a.count ? " · " + esc(a.count) + " " + esc(a.unit) : ""}`);
   if (a.verified) bits.push(`Verified ${when(a.verifiedAt)}${a.verifiedBy ? " by " + esc(a.verifiedBy) : ""}${a.verifyNotes ? " · " + esc(a.verifyNotes) : ""}`);
   if (a.overridden) bits.push(`<b>Overridden</b> by ${esc(a.overrideBy)} ${when(a.overrideAt)}: ${esc(a.overrideReason)}`);
   if (a.completed && !a.verified && !a.overridden) ctl.push(`<div class="row"><input type="text" data-vnote="${esc(a.id)}" placeholder="Verification notes (optional)" value="${esc(DRAFT["n" + k] || "")}" aria-label="Verification notes for ${esc(a.id)}"><button type="button" data-verify="${esc(a.id)}">Verify</button></div>`);
-  if (!a.completed) ctl.push(`<details><summary>Direct close</summary><p class="k">Marks it done without a worker session. The reason is logged.</p><div class="row"><input type="text" data-cwhy="${esc(a.id)}" placeholder="Reason (required)" aria-label="Reason for closing ${esc(a.id)}">${a.requiresCount ? `<input type="number" min="0" step="any" data-cqty="${esc(a.id)}" placeholder="Qty" style="width:80px"><input type="text" data-cunit="${esc(a.id)}" placeholder="Unit" style="width:80px">` : ""}<button type="button" class="alt" data-dc="${esc(a.id)}">Close it</button></div></details>`);
   if (gate && !a.verified && !a.overridden) ctl.push(`<details><summary>Manager override</summary><div class="row"><input type="text" data-why="${esc(a.id)}" placeholder="Reason (required)" value="${esc(DRAFT["w" + k] || "")}" aria-label="Override reason for ${esc(a.id)}"><button type="button" class="alt" data-override="${esc(a.id)}">Override gate</button></div></details>`);
-  return `<div class="act"><label class="ar"><input type="checkbox" data-pick="${esc(a.id)}" ${PICK.has(a.id) ? "checked" : ""}><span class="n"><b>${esc(a.id)}</b> ${esc(a.name)}${gate ? ' <span class="badge s-exc">required gate</span>' : ""}</span><span class="k">${esc(statusOf(a))}${a.assignee ? " · " + esc(String(a.assignee).replace(/;\s*/g, ", ")) : ""}${a.locked ? " · locked until the gates are cleared" : ""}</span></label>${a.description ? `<div class="d k">${esc(a.description)}</div>` : ""}${bits.length ? `<div class="d">${bits.join("<br>")}</div>` : ""}${(a.history || []).length ? `<details><summary>Trail (${a.history.length})</summary>${a.history.slice().reverse().map(h => `<div class="k">${when(h.at)} · ${esc(KINDS[h.kind] || h.kind)}${h.from ? " from " + esc(h.from) : ""}${h.to ? " to " + esc(h.to) : ""} · by ${esc(h.by)}${h.note ? " · Note: " + esc(h.note) : ""}</div>`).join("")}</details>` : ""}${ctl.join("")}</div>`;
+  return `<div class="act${cl ? " cleared" : ""}"><label class="ar"><input type="checkbox" data-pick="${esc(a.id)}" ${cl ? "disabled" : PICK.has(a.id) ? "checked" : ""}><span class="n"><b>${esc(a.id)}</b> ${esc(a.name)}${gate ? (cl ? ' <span class="badge">required gate · cleared</span>' : ' <span class="badge s-exc">required gate</span>') : ""}</span><span class="k">${esc(statusOf(a))}${a.assignee ? " · " + esc(String(a.assignee).replace(/;\s*/g, ", ")) : ""}${a.locked ? " · locked until the gates are cleared" : ""}</span></label>${bits.length ? `<div class="d">${bits.join("<br>")}</div>` : ""}${ctl.join("")}</div>`;
 }
 async function actVerify(id, b) {
   const run = SEL.runId, k = run + id;
@@ -484,14 +426,14 @@ async function actOverride(id, b) {
 function acts(rs, r) {
   if (!rs) return `<p class="k">Loading activities…</p>`;
   if (!rs.activities.length) return `<p class="k">No activities yet. Initiate a wave to add them.</p>`;
+  rs.activities.forEach(a => { if (cleared(a)) PICK.delete(a.id); });
   const by = {}; rs.activities.forEach(a => (by[a.phase || "Required gate activities"] = by[a.phase || "Required gate activities"] || []).push(a)); PH = Object.entries(by);
   return `<div class="row"><button class="alt" type="button" data-selall="un">Tick all unassigned</button><button class="alt" type="button" data-selall="all">Tick all</button><button class="alt" type="button" data-selall="none">Clear ticks</button></div>`
   + PH.map(([ph, l], i) => `<details ${l.some(a => !a.assignee) ? "open" : ""}><summary>${esc(ph)} · ${l.filter(a => a.assignee).length} of ${l.length} assigned</summary><div class="row" style="margin:4px 0"><button class="alt" type="button" data-pall="${i}">Tick or clear this phase</button></div>
     ${l.map(a => actRow(a, r.runId)).join("")}</details>`).join("")
   + `<h3>Workers</h3>${B.workers.length ? `<div class="team">${B.workers.map(x => `<label><input type="checkbox" data-wk="${esc(x.id)}" ${WPICK.has(x.id) ? "checked" : ""}> ${esc(x.name)} <span class="k">${esc(x.role)}</span></label>`).join("")}</div>` : `<p class="k">No active workers found in USERS.</p>`}
-  <div class="row hidden" id="asnote"><input type="text" maxlength="300" data-anote="1" value="${esc(DRAFT["an" + r.runId] || "")}" placeholder="Reassignment note (required): why is this changing?" aria-label="Reassignment note"></div>
   <div class="row"><label class="k">Due date (optional) <input type="date" id="due"></label><button type="button" id="asg" data-assign="1" disabled>Assign</button><span class="k" id="asgn"></span></div>
-  <p class="k">Tick any activities and any workers. Every ticked worker joins the team on every ticked activity, so one worker can take many activities and one activity can have several workers. Ticking an already assigned activity replaces its team: a short note is required and the trail shows from, to, by and the note.</p>${byWorker(rs)}`;
+  <p class="k">Tick any activities and any workers. Every ticked worker joins the team on every ticked activity, so one worker can take many activities and one activity can have several workers. Ticking an already assigned activity replaces its team.</p>${byWorker(rs)}`;
 }
 const LOADING = {}, QI = [];
 async function loadRun(id) { LOADING[id] = 1; try { RS[id] = await get({action:"run", runId:id}); } catch (e) { RS[id] = {activities: []}; toast(e.message, true); } delete LOADING[id]; prof(); }
@@ -527,7 +469,7 @@ document.addEventListener("change", e => { const t = e.target.dataset || {};
   if (t.wk) { e.target.checked ? WPICK.add(t.wk) : WPICK.delete(t.wk); updAssign(); }
   if (e.target.id === "urg") { URG = e.target.checked; gaps(); } });
 document.addEventListener("input", e => { const t = e.target.dataset || {}, r = SEL && SEL.runId;
-  if (t.anote) DRAFT["an" + r] = e.target.value; if (t.vnote) DRAFT["n" + r + t.vnote] = e.target.value; if (t.why) DRAFT["w" + r + t.why] = e.target.value; });
+  if (t.vnote) DRAFT["n" + r + t.vnote] = e.target.value; if (t.why) DRAFT["w" + r + t.why] = e.target.value; });
 document.addEventListener("toggle", e => { const k = e.target.dataset && e.target.dataset.g; if (k) e.target.open ? OPENG.add(k) : OPENG.delete(k); }, true);
 document.addEventListener("click", async e => {
   const b = e.target.closest("button"); if (!b) return; const d = b.dataset, rs = SEL && RS[SEL.runId];
@@ -537,8 +479,8 @@ document.addEventListener("click", async e => {
   else if (d.initq) { const by = {}; QI.forEach(i => (by[i.r.runId] = by[i.r.runId] || []).push(i.w.wave)); for (const [id, ws] of Object.entries(by)) await initWaves(id, ws); }
   else if (d.day !== undefined) { T = d.day === "0" ? localToday() : add(T, +d.day); TRAY = null; render(); }
   else if (d.peak) { T = d.peak; TRAY = null; render(); }
-  else if (d.selall && rs) { PICK.clear(); rs.activities.forEach(a => { if (d.selall === "all" || (d.selall === "un" && !a.assignee)) PICK.add(a.id); }); prof(); }
-  else if (d.pall !== undefined) { const ids = PH[+d.pall][1].map(a => a.id), all = ids.every(i => PICK.has(i)); ids.forEach(i => all ? PICK.delete(i) : PICK.add(i)); prof(); }
+  else if (d.selall && rs) { PICK.clear(); rs.activities.forEach(a => { if (!cleared(a) && (d.selall === "all" || (d.selall === "un" && !a.assignee))) PICK.add(a.id); }); prof(); }
+  else if (d.pall !== undefined) { const ids = PH[+d.pall][1].filter(a => !cleared(a)).map(a => a.id), all = ids.every(i => PICK.has(i)); ids.forEach(i => all ? PICK.delete(i) : PICK.add(i)); prof(); }
   else if (d.mk) { const [c, pl, dt] = d.mk.split("|"), g = grp(c + "|" + pl);
     if (g && confirm(`Create a run for ${g.cropName} (${pf(pl)}), planting date ${fmt(dt)}?\n\nIt starts with this one date. Runs cannot be deleted from the board.`)) mkRuns(c + "|" + pl, [dt]); }
   else if (d.mkall) { const g = grp(d.mkall), l = g ? gapList(g).filter(gapLive).map(x => x.date) : [];
@@ -549,7 +491,7 @@ document.addEventListener("click", async e => {
   else if (d.cm !== undefined) { if (d.cm === "0") { CM = localToday().slice(0, 7); } else { const y = +CM.slice(0, 4), m = +CM.slice(5, 7) - 1 + +d.cm, x = new Date(Date.UTC(y, m, 1)); CM = x.toISOString().slice(0, 7); } CD = null; calendar(); }
   else if (d.cd) { CD = d.cd; CM = d.cd.slice(0, 7); CV = "month"; calendar(); }
   else if (d.tload) loadTeam();
-  else if (d.tclose) { $("team").classList.add("hidden"); $("tb").setAttribute("aria-pressed", "false"); TNOTE = ""; }
+  else if (d.tclose) { $("team").classList.add("hidden"); TNOTE = ""; }
   else if (d.tadd) { const nm = $("tn").value.trim(), wp = $("tp").value.trim();
     if (!nm) return toast("Type the worker's name.", true);
     if (wp && !/^\d{4,8}$/.test(wp)) return toast("The PIN must be 4 to 8 digits, or leave it blank to generate one.", true);
@@ -557,7 +499,7 @@ document.addEventListener("click", async e => {
   else if (d.treset) { const w = TM && TM.workers.find(x => x.id === d.treset);
     if (w && confirm(`Reset the PIN for ${w.name} (${w.id})?\n\nTheir current PIN stops working at the next sign-in and a new one is generated. It is shown once.`)) teamAct({action:"resetPin", workerId:d.treset}, b); }
   else if (d.lload !== undefined) { LAB = null; loadLab(); }
-  else if (d.lclose !== undefined) { $("lab").classList.add("hidden"); $("lb").setAttribute("aria-pressed", "false"); }
+  else if (d.lclose !== undefined) $("lab").classList.add("hidden");
   else if (d.lshow) { LB.show = d.lshow; labPreset(); labor(); }
   else if (d.lview) { LB.view = d.lview; labor(); }
   else if (d.lcsv !== undefined) labCsv();
@@ -567,69 +509,16 @@ document.addEventListener("click", async e => {
   else if (d.verify) actVerify(d.verify, b);
   else if (d.override) actOverride(d.override, b);
   else if (d.assign) {
-    const id = SEL.runId, n = PICK.size, chg = reasgn(), note = (DRAFT["an" + id] || "").trim();
-    if (chg.length && !note) return toast("Write a short note explaining the reassignment first. It is required and is kept in the trail.", true);
-    b.disabled = true; toast(`Assigning ${n} activit${n > 1 ? "ies" : "y"}… this can take up to a minute`);
-    try { RS[id] = await post({action:"assign", runId:id, activityIds:[...PICK], workerIds:[...WPICK], due:$("due").value, note:chg.length ? note : "", user:user()}); PICK.clear(); delete DRAFT["an" + id]; toast("Assigned"); prof(); load(true); }
+    const id = SEL.runId, n = PICK.size; b.disabled = true; toast(`Assigning ${n} activit${n > 1 ? "ies" : "y"}… this can take up to a minute`);
+    try { RS[id] = await post({action:"assign", runId:id, activityIds:[...PICK], workerIds:[...WPICK], due:$("due").value, user:user()}); PICK.clear(); toast("Assigned"); prof(); load(true); }
     catch (x) { toast(x.message, true); prof(); }
   }
 });
-/* Manager view: crew sessions, stall alerts and manager log from ?action=monitor (the feed the Propagation Manager page uses). Refreshes every 60 s while open. */
-let MG = null, MTAB = "crew";
-const MKIND = {DIRECT_CLOSE: "Direct close", GATE_OVERRIDE: "Gate override", LEAF_OVERRIDE: "First-leaf override", ALERT_RESOLVED: "Alert resolved"};
-async function loadMgr(quiet) {
-  try { MG = await get({action: "monitor"}); mgr(); }
-  catch (e) { if (!quiet) toast(e.message, true); if (!MG) $("mgr").innerHTML = `<h2>Manager view</h2><div class="note">${esc(e.message)}</div>`; }
-}
-function mgr() {
-  const el = $("mgr"); if (!MG || !B) return;
-  const ws = flat(), open = (MG.alerts || []).filter(a => a.status === "OPEN"), now = MG.now || Date.now(),
-    inRoom = ws.filter(({r, w}) => inRoomNow(r, w, T)).reduce((n, {w}) => n + w.trays, 0),
-    attn = ws.filter(({r, w}) => stat(r, w, T)[0] === "exc").length, aw = B.runs.filter(r => !r.error).reduce((n, r) => n + r.acts.awaiting, 0),
-    kp = [[inRoom + " / " + CAP, "Trays in room " + fmt(T), 0], [attn, "Waves needing attention", attn], [aw, "Done, awaiting verification", aw], [open.length, "Open stall alerts", open.length], [(MG.sessions || []).length, "Sessions running", 0]];
-  const mins = s => Math.max(0, Math.round((now - Date.parse(s.startedAt) - (s.pausedSec || 0) * 1000 - (s.pausedAt ? now - Date.parse(s.pausedAt) : 0)) / 60000));
-  const crew = (MG.sessions || []).length ? MG.sessions.map(s => `<div class="q"><span class="n"><b>${esc(s.by)}</b> · ${esc(s.activity)} <span class="k">${esc(s.crop)} · wave ${s.wave} · ${esc(s.location)}</span></span><span class="badge ${s.pausedAt ? "s-exc" : "s-occ"}">${s.pausedAt ? "Paused: " + esc(s.pauseReason) : "Running " + mins(s) + " min"}</span></div>`).join("") : `<p class="k">Nobody has a session open.</p>`;
-  const watch = open.length ? open.map(a => `<div class="q"><span class="n"><b>${esc(a.worker_name)}</b> · ${esc(a.activity_name)} <span class="k">${esc(a.crop_code)} · ${esc(a.location)} · stalled ${Math.round((now - Date.parse(a.created_at)) / 60000)} min${a.note ? " · " + esc(a.note) : ""}</span></span><button type="button" data-ra="${esc(a.alert_id)}">Resolve</button></div>`).join("") : `<p class="k">No open stall alerts.</p>`;
-  const log = (MG.mgrLog || []).slice(0, 40).map(l => `<div class="q"><span class="n"><b>${esc(MKIND[l.kind] || l.kind)}</b> <span class="k">${esc(l.run_id)}${l.activity_id ? " · " + esc(l.activity_id) : ""}${l.reason ? " · " + esc(l.reason) : ""} · ${esc(l.by)} · ${when(l.ts)}</span></span></div>`).join("") || `<p class="k">No manager actions logged yet.</p>`;
-  el.innerHTML = `<div class="row" style="margin-top:0"><h2 style="margin:0">Manager view</h2><span class="sp"></span><button type="button" class="alt" data-mr="1">Sync now</button></div>
-  <div class="kp">${kp.map(([v, l, hot]) => `<div class="${hot ? "hot" : ""}"><b>${v}</b><span class="k">${l}</span></div>`).join("")}</div>
-  <div class="row">${[["crew", "Crew"], ["watch", "Watch" + (open.length ? " (" + open.length + ")" : "")], ["log", "Log"]].map(([k, l]) => `<button type="button" class="alt" data-mt="${k}" aria-pressed="${MTAB === k}">${l}</button>`).join("")}</div>
-  ${MTAB === "crew" ? crew : MTAB === "watch" ? watch : log}
-  <p class="k">Updated ${new Date().toLocaleTimeString([], {hour: "numeric", minute: "2-digit"})} · refreshes every 60 s while open. A stall alert is closed here by recording what was done. It does not resume the worker's paused session.</p>`;
-}
-$("mgr").addEventListener("click", async e => {
-  const b = e.target.closest("button"); if (!b) return;
-  if (b.dataset.mt) { MTAB = b.dataset.mt; mgr(); }
-  else if (b.dataset.mr) loadMgr();
-  else if (b.dataset.ra) { const note = prompt("What was done to resolve this alert?"); if (!note || !note.trim()) return; b.disabled = true;
-    try { await post({action: "resolveAlert", alertId: b.dataset.ra, note: note.trim()}); toast("Alert resolved"); loadMgr(true); } catch (err) { toast(err.message, true); b.disabled = false; } }
-});
-setInterval(() => { if (!$("mgr").classList.contains("hidden")) loadMgr(true); }, 60000);
-/* Menu panels: one open at a time, and the panel scrolls into view under the sticky header so the click is always visible. Clicking an open panel's button closes it. */
-const PANELS = {qb: "qp", cb: "cal", tb: "team", lb: "lab", mb: "mgr"};
-function showPanel(btn, onOpen) {
-  const el = $(PANELS[btn]), opening = el.classList.contains("hidden");
-  Object.keys(PANELS).forEach(b => { $(PANELS[b]).classList.add("hidden"); $(b).setAttribute("aria-pressed", "false"); });
-  if (!opening) return;
-  el.classList.remove("hidden"); $(btn).setAttribute("aria-pressed", "true");
-  if (onOpen) onOpen(el);
-  el.style.scrollMarginTop = (document.querySelector("header").offsetHeight + 10) + "px";
-  requestAnimationFrame(() => el.scrollIntoView({behavior: "smooth", block: "start"}));
-}
-$("qb").onclick = () => showPanel("qb");
-$("cb").onclick = () => showPanel("cb");
-$("room").addEventListener("click", e => { const c = e.target.closest("[data-rf]"); if (c) { RF = c.dataset.rf; TRAY = null; room(); } });
-$("gaps").addEventListener("change", e => { const id = e.target.id; if (id === "gf") GF.from = e.target.value; else if (id === "gt") GF.to = e.target.value; else if (id === "gb") GF.by = e.target.value; else return; gaps(); });
-$("gaps").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return;
-  if (b.dataset.gclr) { GF.from = GF.to = ""; gaps(); }
-  else if (b.dataset.mkb) { const n = GJOBS.length, nw = GJOBS.reduce((a, j) => a + j.dates.length, 0); if (!n) return;
-    const rg = GF.from || GF.to ? `\nDate range: ${GF.from ? fmt(GF.from) : "start"} to ${GF.to ? fmt(GF.to) : "end"} (by ${GF.by === "plant" ? "planting" : "sow"} date)` : "";
-    if (confirm(`Create ${n} run${n > 1 ? "s" : ""}, one per crop and platform, with ${nw} wave${nw > 1 ? "s" : ""} in total?${rg}\n\nEach takes several seconds up to a minute, so ${n > 10 ? "this can take several minutes. Keep this page open." : "this may take a minute or two."} If one fails the batch stops and the runs already made are kept. Runs cannot be deleted from the board.`)) mkMany(GJOBS.slice()); } });
-$("mb").onclick = () => showPanel("mb", () => { if (MG) mgr(); loadMgr(true); });
-$("lb").onclick = () => showPanel("lb", el => { if (LAB) labor(); else { el.innerHTML = `<p class="k">Loading labor hours…</p>`; loadLab(); } });
+$("qb").onclick = () => $("qp").classList.toggle("hidden");
+$("cb").onclick = () => $("cal").classList.toggle("hidden");
+$("lb").onclick = () => { const el = $("lab"); el.classList.toggle("hidden"); if (!el.classList.contains("hidden")) { if (LAB) labor(); else { el.innerHTML = `<p class="k">Loading labor hours…</p>`; loadLab(); } } };
 document.addEventListener("change", e => { if (e.target.id === "lf" || e.target.id === "lt") { LB[e.target.id === "lf" ? "from" : "to"] = e.target.value || LB[e.target.id === "lf" ? "from" : "to"]; LB.show = ""; labor(); } });
-$("tb").onclick = () => showPanel("tb", () => { team(); if (!TM) loadTeam(); });
-$("off").onclick = () => { if (!OFFLINE) { if (!useSnap()) return; OFFLINE = true; $("off").textContent = "Go live"; } else { OFFLINE = false; $("off").textContent = "Work offline"; load(); } };
+$("tb").onclick = () => { const el = $("team"); el.classList.toggle("hidden"); if (!el.classList.contains("hidden")) { team(); if (!TM) loadTeam(); else el.scrollIntoView({behavior:"smooth", block:"nearest"}); } };
 $("refresh").onclick = () => { RS = {}; CAL = null; toast("Refreshing…"); load(); };
 const sget = () => { try { return JSON.parse(localStorage.getItem("board_session") || "null"); } catch (e) { return null; } };
 const sput = v => { try { v ? localStorage.setItem("board_session", JSON.stringify(v)) : localStorage.removeItem("board_session"); } catch (e) {} };
