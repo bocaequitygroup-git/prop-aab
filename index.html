@@ -41,16 +41,16 @@ details{margin:6px 0;border:1px solid var(--line);border-radius:8px;padding:6px 
 .chk{display:flex;gap:8px;align-items:center}.chk input{min-height:0;width:18px;height:18px}
 .act{border-bottom:1px dashed var(--line);padding:4px 0}.act>label.ar{border-bottom:0;padding-bottom:0}.act .d{font-size:13px;color:var(--mute);margin:0 0 4px 28px}.act .row,.act details{margin:4px 0 4px 28px}.act input[type=text]{flex:1;min-width:170px}
 .gl .q:last-child{border-bottom:0}
-#prof{--blue:#0b3f8f;--blues:#dbe8ff;--warnb:#e27100;--bads:#ffd5db}
-@media(prefers-color-scheme:dark){#prof{--blue:#9cc2ff;--blues:#1b2c4a;--bads:#3d1c20}}
-#prof .badge{display:inline-flex;gap:5px;align-items:center;white-space:nowrap}
-#prof .badge.st-occupied,#prof .badge.st-ready,#prof .badge.ok{background:var(--accs);color:var(--acc);border-color:var(--acc)}
-#prof .badge.st-attention,#prof .badge.wait{background:var(--warns);color:var(--warn);border-color:var(--warnb)}
-#prof .badge.st-post{background:repeating-linear-gradient(45deg,var(--line) 0 4px,var(--bg) 4px 8px)}
-#prof .badge.bad{background:var(--bads);color:var(--bad);border-color:var(--bad)}
-#prof .badge.open{background:var(--blues);color:var(--blue);border-color:var(--blue)}
-#prof .badge.prog{background:var(--blue);color:var(--bg);border-color:var(--blue)}
-#prof .badge.gry{color:var(--mute)}
+#prof,#room{--blue:#0b3f8f;--blues:#dbe8ff;--warnb:#e27100;--bads:#ffd5db}
+@media(prefers-color-scheme:dark){#prof,#room{--blue:#9cc2ff;--blues:#1b2c4a;--bads:#3d1c20}}
+#prof .badge,#room .badge{display:inline-flex;gap:5px;align-items:center;white-space:nowrap}
+#prof .badge.st-occupied,#prof .badge.st-ready,#prof .badge.ok,#room .badge.st-occupied,#room .badge.st-ready,#room .badge.ok{background:var(--accs);color:var(--acc);border-color:var(--acc)}
+#prof .badge.st-attention,#prof .badge.wait,#room .badge.st-attention,#room .badge.wait{background:var(--warns);color:var(--warn);border-color:var(--warnb)}
+#prof .badge.st-post,#room .badge.st-post{background:repeating-linear-gradient(45deg,var(--line) 0 4px,var(--bg) 4px 8px)}
+#prof .badge.bad,#room .badge.bad{background:var(--bads);color:var(--bad);border-color:var(--bad)}
+#prof .badge.open,#room .badge.open{background:var(--blues);color:var(--blue);border-color:var(--blue)}
+#prof .badge.prog,#room .badge.prog{background:var(--blue);color:var(--bg);border-color:var(--blue)}
+#prof .badge.gry,#room .badge.gry{color:var(--mute)}
 #prof .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;margin:8px 0}#prof .facts div{border:1px solid var(--line);border-radius:8px;padding:6px 10px}#prof .facts b{display:block}
 #prof .light{display:flex;align-items:center;gap:12px;border:2px solid var(--ink);border-radius:12px;padding:8px 14px;margin:6px 0}#prof .light i{width:26px;height:26px;border-radius:50%;border:2px solid var(--ink);flex:none}#prof .light span{font-size:20px;font-weight:700;display:flex;flex-direction:column}#prof .light small{font-size:13px;font-weight:400}
 #prof .light.go{background:var(--accs);border-color:var(--acc);color:var(--acc)}#prof .light.go i{background:#1fb455;border-color:var(--acc);box-shadow:0 0 0 4px var(--accs)}#prof .light.stop{background:var(--warns);border-color:var(--warnb);color:var(--warn)}#prof .light.stop i{background:var(--warnb);border-color:var(--warn)}
@@ -65,6 +65,18 @@ details{margin:6px 0;border:1px solid var(--line);border-radius:8px;padding:6px 
 #prof .rg{margin:4px 0 4px 34px}#prof .rg .team{margin:6px 0}#prof .rg .arrow{font-weight:700;margin:4px 0}
 #prof button.dng{background:var(--bad);color:var(--bg)}#prof button.sm{min-height:30px;padding:3px 10px;font-size:13px}
 #prof .team label input,#prof .act label input{min-height:0;width:18px;height:18px}
+#room .trk{margin:12px 0 4px;display:flex;gap:10px;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:2px}
+#room .wg{margin:8px 0 12px}#room .wh{display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%;text-align:left;background:var(--card);color:var(--ink);font-weight:400;border:1px solid var(--line);border-left-width:8px;padding:6px 10px;min-height:44px;margin-bottom:6px}
+#room .wh.sel{outline:4px solid var(--ink);outline-offset:1px}#room .wh .sw{width:16px;height:16px;border-radius:4px;border:2px solid var(--ink)}
+#room .wv{display:inline-block;background:var(--ink);color:var(--card);border-radius:6px;padding:0 7px;font-weight:700}
+#room .cells{display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:4px}
+#room .cell{aspect-ratio:1;min-height:0;min-width:0;padding:0;border-radius:6px;position:relative;background:var(--c,#555);color:#fff;border:3px solid transparent;text-shadow:0 0 2px #000,0 0 2px #000;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;font-size:13px}#room .cell b{font-size:14px}#room .cell small{font-size:10px;opacity:.9}
+#room .cell.st-attention{border-color:var(--warnb)}#room .cell.st-attention::after,#room .cell.st-ready::after,#room .cell.st-post::after{position:absolute;top:0;right:0;font-size:11px;line-height:1;padding:1px 4px;border-radius:0 0 0 6px;text-shadow:none;color:#000;background:var(--warnb)}
+#room .cell.st-attention::after{content:"!"}#room .cell.st-ready{border-color:#fff;box-shadow:0 0 0 3px var(--acc)}#room .cell.st-ready::after{content:"\2192";background:#fff}
+#room .cell.st-post{background:repeating-linear-gradient(45deg,#7d8780 0 5px,#d4dad6 5px 10px);color:#000;text-shadow:none;border-color:#000}#room .cell.st-post::after{content:"S";background:#fff}
+#room .cell.sel{outline:4px solid var(--ink);outline-offset:1px;z-index:1}#room .cell.e{background:transparent;border:2px dashed var(--line);cursor:default;aspect-ratio:1}
+#room .rleg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;margin:8px 0}#room .rleg span{display:inline-flex;gap:6px;align-items:center}#room .rleg i{width:18px;height:18px;border-radius:4px;border:2px solid var(--ink);display:inline-block}
+#room .chips button.on{background:var(--acc);color:var(--bg);border:0}
 button.on{background:var(--acc);color:var(--bg);border:0}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .cal>div{background:var(--card);min-height:88px;padding:3px 4px;font-size:12px;min-width:0}.cal>.h{min-height:0;color:var(--mute);font-weight:600;text-align:center;padding:5px 0}.cal>.o{background:var(--bg)}.cal>.o .dn{opacity:.5}
@@ -352,23 +364,45 @@ function trayInfo() {
     <span>Sown ${fmt(w.sow)} · transplants ${fmt(w.plant)} (${days(T, w.plant)} days from ${fmt(T)})</span>
     <span>Goes to: ${esc(r.location)}${r.bed ? ", bed " + esc(r.bed) : ""}</span><span class="k">Room position ${TRAY + 1} of ${CAP} · run ${esc(r.runId)}</span></div>`;
 }
+let RFILT = "all", RCF = "";   // room: status filter and crop filter
+const trackOf = r => { const s = String(r.propLocation || ""), i = s.lastIndexOf(" · "); return i >= 0 ? s.slice(i + 3) : (s || "Unassigned"); };
+const bucket = a => (a.completed || a.overridden) ? "dn" : (a.sessions && a.sessions.length) ? "ip" : a.assignee ? "as" : "un";   // mutually exclusive stages
+function tally(list) { const p = {total:list.length, un:0, as:0, ip:0, dn:0}; list.forEach(a => p[bucket(a)]++); return p; }
+function progBadge(r) {   // only runs whose activities are loaded (the open run) show it, as in the Manager console
+  const rs = RS[r.runId], p = rs && rs.activities ? tally(rs.activities) : null; if (!p) return "";
+  if (!p.total) return `<span class="badge open">○ No activities yet</span>`;
+  const all = p.dn === p.total;
+  return `<span class="badge ${all ? "ok" : p.un ? "wait" : "open"}" title="${p.un} not assigned · ${p.as} assigned · ${p.ip} in progress · ${p.dn} complete">${all ? "✓" : p.un ? "!" : "◐"} ${p.dn} of ${p.total} complete</span>`;
+}
+function roomItems(t) { const o = []; flat().forEach(({r, w}) => { if (!(w.trays > 0)) return; const [k, l] = wst(r, w, t); if (k === "pend" || k === "done") return; o.push({r, w, k, l, track: trackOf(r)}); }); return o; }
 function room() {
-  const cap = CAP = Math.floor(800 / SQ), on = flat().filter(x => x.w.trays > 0 && x.w.sow <= T && T < x.w.plant).sort((a, b) => a.w.sow < b.w.sow ? -1 : a.w.sow > b.w.sow ? 1 : 0);
-  const cells = []; on.forEach(({r, w}) => { const [k] = stat(r, w, T); for (let i = 1; i <= w.trays; i++) cells.push({r, w, k, i}); });
-  CELLS = cells.slice(0, cap); const used = CELLS.length, over = cells.length - cap, by = {}; on.forEach(({r, w}) => by[r.crop] = (by[r.crop] || 0) + w.trays);
-  const runs = [...new Map(B.runs.filter(r => !r.error).map(r => [r.crop, r])).values()], pk = busiest();
-  const leg = runs.map(r => { const ws = flat().filter(x => x.r.crop === r.crop && x.w.trays > 0), nx = ws.filter(x => x.w.sow > T).map(x => x.w.sow).sort()[0];
-    return `<span style="margin-right:16px;white-space:nowrap"><i style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${col(r.crop)};margin-right:5px"></i><b>${esc(r.crop)}</b> ${esc(r.cropName)}: ${by[r.crop] ? by[r.crop] + " trays today" : !ws.length ? "direct-seeded, no trays" : nx ? "next in room " + fmt(nx) : "not in room after this day"}</span>`; }).join("");
-  const noRun = noRunNote(), sel = SEL ? CELLS.map((c, i) => c.r.runId === SEL.runId && c.w.wave === SEL.wave ? i : -1) : [];
-  $("room").innerHTML = `<h2>Propagation room · Bay 3</h2>
-  <div class="row"><button class="alt" type="button" data-day="-1">Previous day</button><input type="date" id="day" value="${T}"><button class="alt" type="button" data-day="1">Next day</button><button class="alt" type="button" data-day="0">Today</button>${pk ? `<button class="alt" type="button" data-peak="${pk.t}">Busiest day (${pk.n} trays)</button>` : ""}
-  <label class="k">Sq ft per tray <input type="number" id="sq" min="0.5" step="0.05" value="${SQ}" style="width:80px"></label></div>
-  <p><b>${used}</b> of ${cap} trays occupied on ${fmt(T)} (${Math.round(used / cap * 100)}%) · ${cap - used} empty${over > 0 ? ` · <b style="color:var(--bad)">${over} trays over capacity</b>` : ""}</p>
-  ${noRun}${trayInfo()}
-  <div class="trays">${CELLS.map((c, i) => `<button type="button" class="t ${c.k === "prop" ? "prop" : ""} ${c.k === "exc" ? "exc" : ""} ${i === TRAY ? "sel" : sel.includes(i) ? "wv" : ""}" style="background-color:${col(c.r.crop)}" data-tray="${i}" title="${esc(c.r.cropName)} wave ${c.w.wave}, tray ${c.i} of ${c.w.trays}" aria-label="${esc(c.r.cropName)} wave ${c.w.wave}, tray ${c.i} of ${c.w.trays}">${esc(c.r.crop)}</button>`).join("")}${Array(Math.max(0, cap - CELLS.length)).fill('<div class="t e"></div>').join("")}</div>
-  <div class="k">${leg || "No runs yet."}</div><p class="k">Every crop with a saved run is listed here, including crops not in the room on the day shown. Crops appear once a run is created in the Propagation Engine.</p>`;
+  const cap = CAP = Math.max(1, Math.floor(800 / SQ)), RI = roomItems(T), inR = RI.filter(i => i.k !== "post"), post = RI.filter(i => i.k === "post");
+  const tIn = inR.reduce((n, i) => n + i.w.trays, 0), tPost = post.reduce((n, i) => n + i.w.trays, 0), free = Math.max(0, cap - tIn - tPost), over = tIn + tPost - cap;
+  const cnt = {all:tIn + tPost + free, empty:free, occupied:RI.filter(i => i.k === "occupied" || i.k === "ready").reduce((n, i) => n + i.w.trays, 0), attention:RI.filter(i => i.k === "attention").reduce((n, i) => n + i.w.trays, 0), post:tPost};
+  const flt = [["all", "All"], ["empty", "Available"], ["occupied", "Occupied"], ["attention", "Needs attention"], ["post", "Post-transplant"]];
+  const vis = RI.filter(i => (RFILT === "all" || (RFILT === "occupied" ? i.k === "occupied" || i.k === "ready" : RFILT === i.k)) && (!RCF || i.r.crop === RCF));
+  const crops = [...new Map(B.runs.filter(r => !r.error).map(r => [r.crop, r.cropName])).entries()].sort((a, b) => String(a[1]).localeCompare(String(b[1])));
+  const tracks = [...new Set(vis.map(i => i.track))].sort(), pk = busiest();
+  const sel = i => SEL && SEL.runId === i.r.runId && SEL.wave === i.w.wave;
+  const grp = i => { const c = col(i.r.crop), s = sel(i);
+    return `<div class="wg"><button type="button" class="wh ${s ? "sel" : ""}" style="border-left-color:${c}" data-sel="${esc(i.r.runId)}|${i.w.wave}"><span class="sw" style="background:${c}"></span><b>${esc(i.r.cropName)}</b> <span class="wv">W${i.w.wave}</span> · ${i.w.trays} trays ${wbadge(i.k, i.l)} ${progBadge(i.r)}</button>
+    <div class="cells">${Array.from({length:i.w.trays}, (_, n) => `<button type="button" class="cell st-${i.k} ${s ? "sel" : ""}" style="--c:${c}" data-sel="${esc(i.r.runId)}|${i.w.wave}" title="${esc(i.r.cropName)} W${i.w.wave} · tray ${n + 1} of ${i.w.trays}" aria-label="${esc(i.r.cropName)} wave ${i.w.wave}, tray ${n + 1} of ${i.w.trays}, ${esc(i.l)}"><b>W${i.w.wave}</b><small>T${n + 1}</small></button>`).join("")}</div></div>`; };
+  $("room").innerHTML = `<div class="row" style="margin-top:0"><h2 style="margin:0">Propagation room</h2><span class="sp"></span>
+    <button class="alt" type="button" data-day="-1" aria-label="Previous day">‹</button><input type="date" id="day" value="${T}" aria-label="Date"><button class="alt" type="button" data-day="1" aria-label="Next day">›</button><button class="alt" type="button" data-day="0">Today</button>${pk ? `<button class="alt" type="button" data-peak="${pk.t}">Busiest day (${pk.n} trays)</button>` : ""}</div>
+  <p><b>${tIn}</b> of ${cap} trays in the room on ${fmt(T)}${tPost ? ` · <b>${tPost}</b> bench slots awaiting sanitizing` : ""} · ${free} available${over > 0 ? ` · <b style="color:var(--bad)">${over} over capacity</b>` : ""}</p>
+  ${noRunNote()}
+  <div class="chips" role="group" aria-label="Status filter">${flt.map(([v, l]) => `<button type="button" class="${RFILT === v ? "on" : "alt"}" data-a="filt" data-f="${v}">${l} · ${cnt[v]}</button>`).join("")}</div>
+  <div class="row"><label class="k">Crop <select id="rcf"><option value="">All crops</option>${crops.map(([c, n]) => `<option value="${esc(c)}" ${c === RCF ? "selected" : ""}>${esc(n)} (${esc(c)})</option>`).join("")}</select></label>
+    <label class="k">Sq ft per tray <input type="number" id="sq" min="0.5" step="0.05" value="${SQ}" style="width:90px"></label></div>
+  ${tracks.map(t => { const l = vis.filter(i => i.track === t).sort((a, b) => a.w.sow < b.w.sow ? -1 : a.w.sow > b.w.sow ? 1 : a.r.runId.localeCompare(b.r.runId) || a.w.wave - b.w.wave), n = l.reduce((s, i) => s + i.w.trays, 0);
+    return `<div class="trk"><h3 style="margin:0">Track ${esc(t)}</h3><span class="k">${n} trays shown</span></div>${l.map(grp).join("")}`; }).join("")}
+  ${(RFILT === "all" || RFILT === "empty") && !RCF ? `<div class="trk"><h3 style="margin:0">Available benches</h3><span class="k">${free} tray slots free in Bay 3</span></div><div class="cells">${Array.from({length:Math.min(free, 600)}, () => `<span class="cell e"></span>`).join("")}</div>` : ""}
+  ${!vis.length && RFILT !== "empty" ? `<p class="k">Nothing matches this filter on ${fmt(T)}.</p>` : ""}
+  <div class="rleg"><span><i style="background:#555"></i>In propagation ●</span><span><i style="background:#555;border-color:var(--warnb)"></i>Needs attention !</span><span><i style="background:#555;box-shadow:0 0 0 2px var(--acc)"></i>Transplant ≤ 3 d →</span><span><i style="background:repeating-linear-gradient(45deg,#7d8780 0 4px,#d4dad6 4px 8px)"></i>Post-transplant S</span><span><i style="border-style:dashed"></i>Available</span></div>
+  <p class="k">Capacity = 800 sq ft Bay 3 bench limit (Infra_Field) ÷ sq ft per tray. Tray colors are crops. Each block is one wave (W1, W2 …) and each tray shows its wave and tray number (W2 T3 = wave 2, tray 3). Tap a block or a tray to open that wave. Post-transplant slots stay held until bench sanitizing (ACT-607) is verified or overridden.</p>`;
   $("day").onchange = e => { T = e.target.value || T; TRAY = null; render(); };
   $("sq").onchange = e => { SQ = Math.max(0.5, +e.target.value || 1.55); TRAY = null; room(); };
+  $("rcf").onchange = e => { RCF = e.target.value; room(); };
 }
 const statusOf = a => a.overridden ? "Overridden" : a.verified ? "Verified" : a.completed ? "Done, awaiting verification" : a.sessions && a.sessions.length ? "In progress" : a.assignee ? "Assigned" : "Not assigned";
 function prof() {
@@ -619,6 +653,7 @@ async function doFixMove(id) {
 }
 function paneAct(d) {   // clicks on the wave pane's data-a buttons
   switch (d.a) {
+    case "filt": RFILT = d.f; room(); break;
     case "pickall": { const c = cur(); if (c && c.rs) { PICK.clear(); c.rs.activities.forEach(a => { if (d.m === "all" || (d.m === "un" && !a.assignee) || (d.m === "ids" && (d.ids || "").split(",").includes(a.id))) PICK.add(a.id); }); prof(); if (d.m === "ids") { const el = $("wlist"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); } } break; }
     case "rgo": doReassign(d.id); break; case "fixmove": doFixMove(d.id); break;
     case "verify": doVerify(d.id); break; case "verifyall": doVerifyAll(); break;
