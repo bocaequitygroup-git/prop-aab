@@ -430,7 +430,7 @@ function progBadge(r) {   // only runs whose activities are loaded (the open run
   const rs = RS[r.runId], p = rs && rs.activities ? tally(rs.activities) : null; if (!p) return "";
   if (!p.total) return `<span class="badge open">○ No activities yet</span>`;
   const all = p.dn === p.total;
-  return `<span class="badge ${all ? "ok" : p.un ? "wait" : "open"}" title="${p.un} not assigned · ${p.as} assigned · ${p.ip} working or partly done · ${p.dn} complete">${all ? "✓" : p.un ? "!" : "◐"} ${p.dn} of ${p.total} complete</span>`;
+  return `<span class="badge ${all ? "ok" : p.un ? "wait" : "open"}" title="${p.un} not assigned · ${p.as} assigned · ${p.ip} in progress · ${p.dn} complete">${all ? "✓" : p.un ? "!" : "◐"} ${p.dn} of ${p.total} complete</span>`;
 }
 function roomItems(t) { const o = []; flat().forEach(({r, w}) => { if (!(w.trays > 0)) return; const [k, l] = wst(r, w, t); if (k === "pend" || k === "done") return; o.push({r, w, k, l, track: trackOf(r)}); }); return o; }
 function roomMath() {
@@ -549,7 +549,9 @@ const UIOPEN = {};   // remembers which lists the manager expanded or collapsed 
 const opn = (k, def) => (k in UIOPEN ? UIOPEN[k] : def) ? "open" : "";
 document.addEventListener("toggle", e => { const k = e.target.dataset && e.target.dataset.ok; if (k) UIOPEN[k] = e.target.open; }, true);
 const isDone = a => actKind(a).k === "done";
-function actLabel(a) {   // [css, text] one plain status word per activity
+const othW = a => { if (a.scope !== "crop-wave" || !WV) return ""; const o = (a.sessions || []).filter(s => Number(s.wave) !== WV.wave); return o.length ? " · also working now on other waves: " + o.map(s => esc(s.by) + " W" + s.wave).join(", ") : ""; };
+function actLabel(a) { const r = actLabel0(a), o = othW(a); return o ? [r[0], r[1] + o] : r; }
+function actLabel0(a) {   // [css, text] one plain status word per activity
   if (a.overridden) return ["ok", "✓ Completed (overridden)"];
   const q = actKind(a), n = a.scope === "crop-wave" && WV ? " · W" + WV.wave : "";
   if (q.k === "done") return ["ok", "✓ Completed · verified" + n];
@@ -565,7 +567,7 @@ function nextStep(r, w, rs, gates, next) {   // one clear instruction: what the 
   if (pend.length) return step(`Verify ${pend.length} completed step${pend.length > 1 ? "s" : ""}`, `Workers finished ${pend.map(a => esc(a.id + " " + a.name)).join(", ")}. Check the bench, then press Verify.`, `<button type="button" data-a="verifyall">Verify bed ready (${pend.length})</button>`);
   if (un.length) return step(`Assign ${un.length} required activit${un.length > 1 ? "ies" : "y"}`, `${un.map(a => esc(a.id + " " + a.name)).join(", ")} must be done before sowing. Tick them, tick the workers, press Assign.`, tick(un, "Tick these and choose workers"));
   const wait = pre.filter(a => !gateOk(a));
-  if (wait.length) return step("Wait for the workers", `${wait.length} required activit${wait.length > 1 ? "ies are" : "y is"} with workers (${wait.filter(a => a.sessions && a.sessions.length).length} in progress). Nothing to do here until they finish.`);
+  if (wait.length) return step("Wait for the workers", `${wait.length} required activit${wait.length > 1 ? "ies are" : "y is"} with workers (${wait.filter(a => actLabel(a)[0] === "prog").length} in progress). Nothing to do here until they finish.`);
   const lf = !r.direct && !leafOk(w) && leafDue(w, T) ? ` The first-leaf check for wave ${w.wave} is also due: set it under First-leaf check.` : "";
   const phs = []; next.slice().sort((x, y) => x.id < y.id ? -1 : 1).forEach(a => { const p = a.phase || "Activities"; let g = phs.find(x => x.p === p); if (!g) phs.push(g = {p, l:[]}); g.l.push(a); });
   const cp = phs.find(g => g.l.some(a => !isDone(a)));
@@ -578,7 +580,7 @@ function nextStep(r, w, rs, gates, next) {   // one clear instruction: what the 
   const pw = a => { const p = (a.portions || []).find(x => x.wave === w.wave); return p ? p.workers.filter(x => x.submitted && !x.verified).length : 0; }, pn = cp.l.filter(a => pw(a) > 0);
   if (pn.length) { const n = pn.reduce((s, a) => s + pw(a), 0);
     return step(`Verify ${n} submitted worker portion${n > 1 ? "s" : ""} in ${esc(cp.p)}`, `${pn.map(a => esc(a.id + " " + a.name) + " (" + pw(a) + ")").join(", ")}. Check each worker's work, add notes if needed, and press Verify beside their name in the list below. The next phase stays on hold until every portion is verified.${lf}`, `<button type="button" data-a="verifyphase" data-p="${esc(cp.p)}">Verify all submitted on wave ${w.wave}…</button>`); }
-  return step(`Wait for ${esc(cp.p)}`, `All activities in this phase are assigned (${cp.l.filter(a => a.sessions && a.sessions.length).length} in progress, ${cp.l.filter(isDone).length} of ${cp.l.length} completed).${lf}`);
+  return step(`Wait for ${esc(cp.p)}`, `All activities in this phase are assigned (${cp.l.filter(a => actLabel(a)[0] === "prog").length} in progress, ${cp.l.filter(isDone).length} of ${cp.l.length} completed).${lf}`);
 }
 function progCard(r, w) {
   WV = w; const rs = RS[r.runId];
@@ -591,8 +593,7 @@ function progCard(r, w) {
   const op = (k, def) => (k in UIOPEN ? UIOPEN[k] : def) ? "open" : "";
   const row = (a, tag) => { const [c, t] = actLabel(a), dn = isDone(a);
     return `<li class="al-row ${dn ? "dim" : ""}"><span class="al-n"><b>${esc(a.id)}</b> ${esc(a.name)}${tag ? ` <span class="k">· ${tag}</span>` : ""}${a.assignee ? `<span class="k al-w">${esc(String(a.assignee).replace(/;\s*/g, ", "))}</span>` : ""}${portNote(a)}</span><span class="badge ${dn ? "gry" : c}">${t}</span></li>${(() => { const b = (a.pending || (!isDone(a) && waitingOn(a).length && a.portions && a.portions.length)) && !a.overridden ? portBox(a, r) : ""; return b ? `<li class="al-row" style="display:block">${b}</li>` : ""; })()}`; };
-  const liveN = l => l.filter(a => actLabel(a)[0] === "prog" && (a.sessions || []).length).length;
-  const cnt = l => { const lv = liveN(l), pt = progN(l) - lv; return `${doneN(l)} of ${l.length} completed${lv ? ", " + lv + " working now" : ""}${pt ? ", " + pt + " partly done" : ""}`; };
+  const cnt = l => `${doneN(l)} of ${l.length} completed${progN(l) ? ", " + progN(l) + " in progress" : ""}`;
   const reqDone = gates.length && gates.every(isDone), kg = key("req");
   const req = !gates.length ? "" : `<details class="grp ${reqDone ? "dim" : ""}" data-ok="${esc(kg)}" ${op(kg, !reqDone)}><summary>${reqDone ? "✓ " : ""}Required activities · ${cnt(gates)}</summary><ul class="al-list">${gates.map(a => row(a, a.scope === "post-transplant" ? "after transplant" : "before sowing")).join("")}</ul></details>`;
   const phs = []; next.slice().sort((x, y) => x.id < y.id ? -1 : 1).forEach(a => { const p = a.phase || "Activities"; let g = phs.find(x => x.p === p); if (!g) phs.push(g = {p, l:[]}); g.l.push(a); });
