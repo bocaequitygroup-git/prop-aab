@@ -86,16 +86,29 @@ button.on{background:var(--acc);color:var(--bg);border:0}
 .tf{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 12px;align-items:end;margin:8px 0}.tf label{display:grid;gap:2px}#login{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:16px}#login .card{width:min(360px,100%);display:grid;gap:10px;margin:0}#login label{display:grid;gap:2px}
 .tw{overflow-x:auto}.lt tr.sub td{color:var(--mute)}.lt tr.sub td:first-child{padding-left:28px}.lt tr.tot td{font-weight:700;border-top:2px solid var(--line)}.lt tr.grp td{font-weight:600}
 .ag{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}.ag .n{flex:1;min-width:220px}
-@media print{header,.leg,.lay,#qp,#err,#toast,#cal .noprint{display:none!important}body{background:#fff}#cal{border:0}}
+@media print{header,.leg,aside,#kpis,#tabs,#err,#toast,#room,#waves,#prof,#qp,#team,#lab,#cal .noprint{display:none!important}body{background:#fff}.lay{display:block;padding:0}#cal{border:0;display:block!important}}
 @media(prefers-reduced-motion:no-preference){.t{transition:transform .1s}.t:not(.e):hover{transform:scale(1.25)}}
+
+main{min-width:0}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin:0 0 12px;scroll-margin-top:70px}.tabs button{white-space:nowrap}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:0 0 12px}
+button.kpi{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-height:62px;font-weight:400;gap:0}
+button.kpi b{font-size:24px;line-height:1.1}button.kpi span{font-size:13px;color:var(--mute)}button.kpi.hot{background:var(--warns);border-color:var(--warn)}button.kpi.hot b,button.kpi.hot span{color:var(--warn)}
+details.cg{border:1px solid var(--line);padding:4px 10px}details.cg>summary{padding:4px 0}details.tk{border:0;padding:0}details.tk>summary{border-bottom:2px solid var(--ink);padding-bottom:2px;margin-bottom:6px;font-size:15px}
+#prof details.blk{padding:8px 12px}#prof details.blk>summary{font-size:16px;font-weight:700;padding:2px 0;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}#prof details.blk[open]>summary{margin-bottom:8px}
+#waves{--blue:#0b3f8f;--blues:#dbe8ff;--warnb:#e27100;--bads:#ffd5db}
+@media(prefers-color-scheme:dark){#waves{--blue:#9cc2ff;--blues:#1b2c4a;--bads:#3d1c20}}
+#waves .badge{display:inline-flex;gap:5px;align-items:center;white-space:nowrap}
+#waves .badge.st-occupied,#waves .badge.st-ready{background:var(--accs);color:var(--acc);border-color:var(--acc)}
+#waves .badge.st-attention{background:var(--warns);color:var(--warn);border-color:var(--warnb)}
+#waves .badge.st-post{background:repeating-linear-gradient(45deg,var(--line) 0 4px,var(--bg) 4px 8px)}
+#waves .wv{display:inline-block;background:var(--ink);color:var(--card);border-radius:6px;padding:0 7px;font-weight:700}
+#waves .chips button.on{background:var(--acc);color:var(--bg);border:0}
+#waves .q{padding:10px 0}
 </style></head><body>
 <header>
 <h1>Activity Assignment Board</h1><span class="k">Ngapori Ranch · Propagation</span>
 <span class="conn off" id="conn">Connecting…</span><span class="sp"></span>
-<button class="alt" id="qb" type="button">Assignment queue (0)</button>
-<button class="alt" id="cb" type="button">Production calendar</button>
-<button class="alt" id="tb" type="button">Team</button>
-<button class="alt" id="lb" type="button">Labor Hours</button>
 <span class="k" id="who"></span><button class="alt" id="logout" type="button">Log out</button>
 <button class="alt" id="refresh" type="button">Refresh</button>
 </header>
@@ -107,17 +120,20 @@ button.on{background:var(--acc);color:var(--bg);border:0}
 <div id="lerr" class="note hidden" role="alert"></div>
 <button id="lgo" type="button">Sign in</button></div></div>
 <div id="err" class="note hidden" style="margin:0 16px 10px"></div>
-<section class="card hidden" id="qp" style="margin:0 16px 14px"></section>
-<section class="card hidden" id="team" style="margin:0 16px 14px"></section>
-<section class="card hidden" id="lab" style="margin:0 16px 14px"></section>
-<section class="card" id="cal" style="margin:0 16px 14px"><p class="k">Loading the production calendar…</p></section>
 <div class="lay">
-<div><section class="card" id="crops"><p class="k">Loading crops and waves…</p></section>
-<section class="card hidden" id="gaps"></section></div>
-<div>
-<section class="card" id="room"></section>
-<section class="card" id="prof"></section>
-</div></div>
+<aside><section class="card" id="crops"><p class="k">Loading crops and waves…</p></section>
+<section class="card hidden" id="gaps"></section></aside>
+<main>
+<div id="kpis" class="kpis"></div>
+<nav id="tabs" class="tabs" role="tablist" aria-label="Board sections"></nav>
+<section class="card" id="cal"><p class="k">Loading the production calendar…</p></section>
+<section class="card hidden" id="room"></section>
+<section class="card hidden" id="waves"></section>
+<section class="card hidden" id="prof"></section>
+<section class="card hidden" id="qp"></section>
+<section class="card hidden" id="team"></section>
+<section class="card hidden" id="lab"></section>
+</main></div>
 <div id="toast" class="hidden"></div>
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbz7qyhFT5BRUpiqLCnjtT8gRX-UQ-I0lQhF__H6dgCU_Rql2WFOMuNm-YLXazi0Zrir_g/exec"; // Apps Script web app URL (ends in /exec)
@@ -160,15 +176,20 @@ async function load(quiet) {
   try { B = await get({action:"board"}); $("conn").textContent = "Connected · " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}); $("conn").className = "conn"; $("err").classList.add("hidden"); render(); if (!CAL) loadCal(); }
   catch (e) { $("conn").textContent = "Offline"; $("conn").className = "conn off"; $("err").textContent = e.message; $("err").classList.remove("hidden"); if (!quiet) toast(e.message, true); }
 }
-function render() { crops(); gaps(); room(); prof(); queue(); calendar(); }
+function render() { crops(); gaps(); room(); wavesList(); prof(); queue(); calendar(); kpis(); tabs(); }
 function crops() {
   const G = B.gaps ? B.gaps.groups : [], codes = [...new Map([...B.runs.map(r => [r.crop, r.cropName]), ...G.map(g => [g.crop, g.cropName])]).entries()].sort((a, b) => String(a[1]).localeCompare(String(b[1])));
-  const runs = B.runs.filter(r => !FILTER || r.crop === FILTER);
-  $("crops").innerHTML = `<h2>Crops and waves</h2><label class="k">Crop <select id="cf"><option value="">All crops</option>${codes.map(([c, n]) => `<option value="${esc(c)}" ${c === FILTER ? "selected" : ""}>${esc(n)} (${esc(c)})</option>`).join("")}</select></label>
-  ${runs.length ? runs.map(r => r.error ? `<div class="run"><b>${esc(r.cropName)}</b><div class="note">Run ${esc(r.runId)} could not be read: ${esc(r.error)}</div></div>` : `<div class="run"><div class="row" style="margin:0"><b>${esc(r.cropName)} (${esc(r.crop)})</b><span class="k">${pf(r.platform)} · ${esc(r.runId)}${r.runType === "ADDITIONAL" ? " · unplanned" : ""}</span></div>
+  const runs = B.runs.filter(r => !FILTER || r.crop === FILTER), selRun = SEL && B.runs.find(r => r.runId === SEL.runId), selCrop = selRun ? selRun.crop : "";
+  const byCrop = new Map(); runs.forEach(r => { if (!byCrop.has(r.crop)) byCrop.set(r.crop, []); byCrop.get(r.crop).push(r); });
+  const runHtml = r => r.error ? `<div class="run"><b>${esc(r.cropName)}</b><div class="note">Run ${esc(r.runId)} could not be read: ${esc(r.error)}</div></div>` : `<div class="run"><div class="row" style="margin:0"><b>${pf(r.platform)}</b><span class="k">${esc(r.runId)}${r.runType === "ADDITIONAL" ? " · unplanned" : ""}</span></div>
     <div class="k">${esc(r.location)} · activities ${r.acts.assigned}/${r.acts.total} assigned${r.acts.awaiting ? ` · <b>${r.acts.awaiting} awaiting verification</b>` : ""}</div>
     <div class="chips">${r.waves.map(w => { const [k, l] = stat(r, w, T); return `<button type="button" class="chip s-${k} ${SEL && SEL.runId === r.runId && SEL.wave === w.wave ? "sel" : ""}" data-sel="${esc(r.runId)}|${w.wave}" title="${esc(l)}"><b>Wave ${w.wave}</b><br>${fmt(w.sow)} to ${fmt(w.plant)}</button>`; }).join("")}</div>
-    ${r.waves.some(w => !w.init) ? `<button type="button" data-init="${esc(r.runId)}|all">Initiate all waves</button>` : `<span class="badge s-init">All waves initiated</span>`}</div>`).join("") : `<p class="k">${FILTER ? "No runs for this crop yet. Its planned dates are listed under Planned, no run." : "No runs yet. Create one from Planned, no run below, or in the Propagation Engine."}</p>`}`;
+    ${r.waves.some(w => !w.init) ? `<button type="button" data-init="${esc(r.runId)}|all">Initiate all waves</button>` : `<span class="badge s-init">All waves initiated</span>`}</div>`;
+  const grpHtml = ([c, l]) => { const k = "crop|" + c, nw = l.reduce((n, r) => n + (r.waves ? r.waves.length : 0), 0);
+    return `<details class="cg" data-ok="${esc(k)}" ${opn(k, !!FILTER || c === selCrop)}><summary>${esc(l[0].cropName)} (${esc(c)}) · ${l.length} run${l.length > 1 ? "s" : ""} · ${nw} wave${nw === 1 ? "" : "s"}</summary>${l.map(runHtml).join("")}</details>`; };
+  $("crops").innerHTML = `<h2>Crops and waves</h2><label class="k">Crop <select id="cf"><option value="">All crops</option>${codes.map(([c, n]) => `<option value="${esc(c)}" ${c === FILTER ? "selected" : ""}>${esc(n)} (${esc(c)})</option>`).join("")}</select></label>
+  <p class="k" style="margin:6px 0">Tap a crop to open its runs. Tap a wave to open it.</p>
+  ${byCrop.size ? [...byCrop.entries()].sort((a, b) => String(a[1][0].cropName).localeCompare(String(b[1][0].cropName))).map(grpHtml).join("") : `<p class="k">${FILTER ? "No runs for this crop yet. Its planned dates are listed under Planned, no run." : "No runs yet. Create one from Planned, no run below, or in the Propagation Engine."}</p>`}`;
   $("cf").onchange = e => { FILTER = e.target.value; render(); };
 }
 const grp = key => B.gaps && B.gaps.groups.find(g => g.crop + "|" + g.platform === key);
@@ -184,7 +205,7 @@ function gaps() {
   if (!B.gaps) { el.innerHTML = `<h2>Planned, no run</h2><div class="note">The server did not send the season plan. Deploy the latest Code_pro.gs as a new version, then press Refresh.</div>`; return; }
   const gs = B.gaps.groups.filter(g => !FILTER || g.crop === FILTER).map(g => ({g, l: gapList(g)})).filter(x => x.l.length),
     total = gs.reduce((n, x) => n + x.l.length, 0), live = gs.reduce((n, x) => n + x.l.filter(gapLive).length, 0);
-  el.innerHTML = `<h2>Planned, no run</h2>
+  el.innerHTML = `<details data-ok="gapsAll" ${opn("gapsAll", false)}><summary>Planned, no run · ${total} shown</summary>
   <p class="k">Planting dates in Planting_Plan and GH_Waves that no saved run lands on (matched by exact planting date): ${B.gaps.planned - B.gaps.covered} of ${B.gaps.planned} planned dates this season. Create a run from any of them.</p>
   <label class="k chk"><input type="checkbox" id="urg" ${URG ? "checked" : ""}> Only sow dates within 30 days of ${fmt(T)}, or already passed</label>
   <p><b>${total}</b> shown${FILTER ? " for this crop" : ""}${total > live ? `, ${total - live} with a planting date that has already passed` : ""}.</p>
@@ -194,7 +215,7 @@ function gaps() {
     ${facts ? `<div class="k">${facts}</div>` : ""}
     ${g.error ? `<div class="note">${esc(g.error)}. Runs cannot be created for this crop until that is fixed.</div>` : ""}${(g.notes || []).map(n => `<div class="note">${esc(n)}</div>`).join("")}
     ${!g.error && nl.length > 1 ? `<div class="row"><button type="button" class="alt" data-mkall="${esc(key)}">Create ${nl.length} runs, one per planting date</button></div>` : ""}
-    ${l.map(i => gapRow(g, i, key)).join("")}</details>`; }).join("") : `<p class="k">${URG ? "Nothing is due to sow soon without a run." : FILTER ? "Every planned date for this crop has a run." : "Every planned date has a run."}</p>`}`;
+    ${l.map(i => gapRow(g, i, key)).join("")}</details>`; }).join("") : `<p class="k">${URG ? "Nothing is due to sow soon without a run." : FILTER ? "Every planned date for this crop has a run." : "Every planned date has a run."}</p>`}</details>`;
 }
 function noRunNote() {   // trays that are planned for the room on day T but have no run yet (not counted in the occupancy figure)
   if (!B.gaps) return "";
@@ -400,41 +421,85 @@ function progBadge(r) {   // only runs whose activities are loaded (the open run
   return `<span class="badge ${all ? "ok" : p.un ? "wait" : "open"}" title="${p.un} not assigned · ${p.as} assigned · ${p.ip} in progress · ${p.dn} complete">${all ? "✓" : p.un ? "!" : "◐"} ${p.dn} of ${p.total} complete</span>`;
 }
 function roomItems(t) { const o = []; flat().forEach(({r, w}) => { if (!(w.trays > 0)) return; const [k, l] = wst(r, w, t); if (k === "pend" || k === "done") return; o.push({r, w, k, l, track: trackOf(r)}); }); return o; }
-function room() {
+function roomMath() {
   const cap = CAP = Math.max(1, Math.floor(800 / SQ)), RI = roomItems(T), inR = RI.filter(i => i.k !== "post"), post = RI.filter(i => i.k === "post");
-  const tIn = inR.reduce((n, i) => n + i.w.trays, 0), tPost = post.reduce((n, i) => n + i.w.trays, 0), free = Math.max(0, cap - tIn - tPost), over = tIn + tPost - cap;
-  const cnt = {all:tIn + tPost + free, empty:free, occupied:RI.filter(i => i.k === "occupied" || i.k === "ready").reduce((n, i) => n + i.w.trays, 0), attention:RI.filter(i => i.k === "attention").reduce((n, i) => n + i.w.trays, 0), post:tPost};
-  const flt = [["all", "All"], ["empty", "Available"], ["occupied", "Occupied"], ["attention", "Needs attention"], ["post", "Post-transplant"]];
+  const tIn = inR.reduce((n, i) => n + i.w.trays, 0), tPost = post.reduce((n, i) => n + i.w.trays, 0);
+  return {cap, RI, tIn, tPost, free: Math.max(0, cap - tIn - tPost), over: tIn + tPost - cap};
+}
+function room() {
+  if (RFILT === "empty") RFILT = "all";
+  const {cap, RI, tIn, tPost, free, over} = roomMath(), pk = busiest();
+  const cnt = {all: tIn + tPost, occupied: RI.filter(i => i.k === "occupied" || i.k === "ready").reduce((n, i) => n + i.w.trays, 0), attention: RI.filter(i => i.k === "attention").reduce((n, i) => n + i.w.trays, 0), post: tPost};
+  const flt = [["all", "All"], ["occupied", "Occupied"], ["attention", "Needs attention"], ["post", "Post-transplant"]];
   const vis = RI.filter(i => (RFILT === "all" || (RFILT === "occupied" ? i.k === "occupied" || i.k === "ready" : RFILT === i.k)) && (!RCF || i.r.crop === RCF));
   const crops = [...new Map(B.runs.filter(r => !r.error).map(r => [r.crop, r.cropName])).entries()].sort((a, b) => String(a[1]).localeCompare(String(b[1])));
-  const tracks = [...new Set(vis.map(i => i.track))].sort(), pk = busiest();
+  const tracks = [...new Set(vis.map(i => i.track))].sort();
   const sel = i => SEL && SEL.runId === i.r.runId && SEL.wave === i.w.wave;
   const grp = i => { const c = col(i.r.crop), s = sel(i);
     return `<div class="wg"><button type="button" class="wh ${s ? "sel" : ""}" style="border-left-color:${c}" data-sel="${esc(i.r.runId)}|${i.w.wave}"><span class="sw" style="background:${c}"></span><b>${esc(i.r.cropName)}</b> <span class="wv">W${i.w.wave}</span> · ${i.w.trays} trays ${wbadge(i.k, i.l)} ${progBadge(i.r)}</button>
     <div class="cells">${Array.from({length:i.w.trays}, (_, n) => `<button type="button" class="cell st-${i.k} ${s ? "sel" : ""}" style="--c:${c}" data-sel="${esc(i.r.runId)}|${i.w.wave}" title="${esc(i.r.cropName)} W${i.w.wave} · tray ${n + 1} of ${i.w.trays}" aria-label="${esc(i.r.cropName)} wave ${i.w.wave}, tray ${n + 1} of ${i.w.trays}, ${esc(i.l)}"><b>W${i.w.wave}</b><small>T${n + 1}</small></button>`).join("")}</div></div>`; };
-  $("room").innerHTML = `<div class="row" style="margin-top:0"><h2 style="margin:0">Propagation room</h2><span class="sp"></span>
+  const top = `<div class="row" style="margin-top:0"><h2 style="margin:0">Propagation room</h2><span class="sp"></span>
     <button class="alt" type="button" data-day="-1" aria-label="Previous day">‹</button><input type="date" id="day" value="${T}" aria-label="Date"><button class="alt" type="button" data-day="1" aria-label="Next day">›</button><button class="alt" type="button" data-day="0">Today</button>${pk ? `<button class="alt" type="button" data-peak="${pk.t}">Busiest day (${pk.n} trays)</button>` : ""}</div>
   <p><b>${tIn}</b> of ${cap} trays in the room on ${fmt(T)}${tPost ? ` · <b>${tPost}</b> bench slots awaiting sanitizing` : ""} · ${free} available${over > 0 ? ` · <b style="color:var(--bad)">${over} over capacity</b>` : ""}</p>
   ${noRunNote()}
-  <div class="chips" role="group" aria-label="Status filter">${flt.map(([v, l]) => `<button type="button" class="${RFILT === v ? "on" : "alt"}" data-a="filt" data-f="${v}">${l} · ${cnt[v]}</button>`).join("")}</div>
+  <div class="chips" role="group" aria-label="Room view"><button type="button" class="${RV === "map" ? "on" : "alt"}" data-rview="map">Room map</button><button type="button" class="${RV === "bench" ? "on" : "alt"}" data-rview="bench">Available benches · ${free}</button></div>`;
+  const map = `<div class="chips" role="group" aria-label="Status filter">${flt.map(([v, l]) => `<button type="button" class="${RFILT === v ? "on" : "alt"}" data-a="filt" data-f="${v}">${l} · ${cnt[v]}</button>`).join("")}</div>
   <div class="row"><label class="k">Crop <select id="rcf"><option value="">All crops</option>${crops.map(([c, n]) => `<option value="${esc(c)}" ${c === RCF ? "selected" : ""}>${esc(n)} (${esc(c)})</option>`).join("")}</select></label>
     <label class="k">Sq ft per tray <input type="number" id="sq" min="0.5" step="0.05" value="${SQ}" style="width:90px"></label></div>
-  ${tracks.map(t => { const l = vis.filter(i => i.track === t).sort((a, b) => a.w.sow < b.w.sow ? -1 : a.w.sow > b.w.sow ? 1 : a.r.runId.localeCompare(b.r.runId) || a.w.wave - b.w.wave), n = l.reduce((s, i) => s + i.w.trays, 0);
-    return `<div class="trk"><h3 style="margin:0">Track ${esc(t)}</h3><span class="k">${n} trays shown</span></div>${l.map(grp).join("")}`; }).join("")}
-  ${(RFILT === "all" || RFILT === "empty") && !RCF ? `<div class="trk"><h3 style="margin:0">Available benches</h3><span class="k">${free} tray slots free in Bay 3</span></div><div class="cells">${Array.from({length:Math.min(free, 600)}, () => `<span class="cell e"></span>`).join("")}</div>` : ""}
-  ${!vis.length && RFILT !== "empty" ? `<p class="k">Nothing matches this filter on ${fmt(T)}.</p>` : ""}
-  <div class="rleg"><span><i style="background:#555"></i>In propagation ●</span><span><i style="background:#555;border-color:var(--warnb)"></i>Needs attention !</span><span><i style="background:#555;box-shadow:0 0 0 2px var(--acc)"></i>Transplant ≤ 3 d →</span><span><i style="background:repeating-linear-gradient(45deg,#7d8780 0 4px,#d4dad6 4px 8px)"></i>Post-transplant S</span><span><i style="border-style:dashed"></i>Available</span></div>
+  ${tracks.map(t => { const l = vis.filter(i => i.track === t).sort((a, b) => a.w.sow < b.w.sow ? -1 : a.w.sow > b.w.sow ? 1 : a.r.runId.localeCompare(b.r.runId) || a.w.wave - b.w.wave), n = l.reduce((s, i) => s + i.w.trays, 0), k = "trk|" + t;
+    return `<details class="tk" data-ok="${esc(k)}" ${opn(k, true)}><summary>Track ${esc(t)} · ${n} trays shown</summary>${l.map(grp).join("")}</details>`; }).join("")}
+  ${!vis.length ? `<p class="k">Nothing matches this filter on ${fmt(T)}.</p>` : ""}
+  <div class="rleg"><span><i style="background:#555"></i>In propagation ●</span><span><i style="background:#555;border-color:var(--warnb)"></i>Needs attention !</span><span><i style="background:#555;box-shadow:0 0 0 2px var(--acc)"></i>Transplant ≤ 3 d →</span><span><i style="background:repeating-linear-gradient(45deg,#7d8780 0 4px,#d4dad6 4px 8px)"></i>Post-transplant S</span></div>
   <p class="k">Capacity = 800 sq ft Bay 3 bench limit (Infra_Field) ÷ sq ft per tray. Tray colors are crops. Each block is one wave (W1, W2 …) and each tray shows its wave and tray number (W2 T3 = wave 2, tray 3). Tap a block or a tray to open that wave. Post-transplant slots stay held until bench sanitizing (ACT-607) is verified or overridden.</p>`;
+  const bench = `<h3 style="margin-top:4px">Available benches</h3>
+  <p><b>${free}</b> of ${cap} tray slots are free in Bay 3 on ${fmt(T)}${over > 0 ? ` · <b style="color:var(--bad)">${over} over capacity</b>` : ""}${tPost ? ` · ${tPost} more are held until bench sanitizing is verified` : ""}.</p>
+  ${free ? `<div class="cells">${Array.from({length: Math.min(free, 600)}, () => `<span class="cell e"></span>`).join("")}</div>${free > 600 ? `<p class="k">Showing 600 of ${free} free slots.</p>` : ""}` : `<p class="k">No free slots on this day.</p>`}
+  <div class="rleg"><span><i style="border-style:dashed"></i>Available</span></div>
+  <p class="k">Change the date above to see free benches on another day. Capacity uses ${SQ} sq ft per tray; change it under Room map.</p>`;
+  $("room").innerHTML = top + (RV === "bench" ? bench : map);
   $("day").onchange = e => { T = e.target.value || T; TRAY = null; render(); };
-  $("sq").onchange = e => { SQ = Math.max(0.5, +e.target.value || 1.55); TRAY = null; room(); };
-  $("rcf").onchange = e => { RCF = e.target.value; room(); };
+  if ($("sq")) $("sq").onchange = e => { SQ = Math.max(0.5, +e.target.value || 1.55); TRAY = null; render(); };
+  if ($("rcf")) $("rcf").onchange = e => { RCF = e.target.value; room(); };
+}
+/* ---------- tabs: calendar (opener), propagation room, Waves list, Wave, queue, team, labor ---------- */
+let TAB = "cal", QN = 0, WF = "all", RV = "map";
+const TABS = [["cal", "Production calendar"], ["room", "Propagation room"], ["waves", "Waves"], ["wave", "Wave"], ["queue", "Queue"], ["team", "Team"], ["lab", "Labor Hours"]];
+const PANES = {cal: "cal", room: "room", waves: "waves", wave: "prof", queue: "qp", team: "team", lab: "lab"};
+function tabs() {
+  const sr = SEL && B.runs.find(r => r.runId === SEL.runId);
+  $("tabs").innerHTML = TABS.map(([v, l]) => { const t = v === "wave" && sr ? `Wave · ${esc(sr.cropName)} W${SEL.wave}` : v === "queue" ? `Queue (${QN})` : l;
+    return `<button type="button" role="tab" aria-selected="${TAB === v}" class="${TAB === v ? "on" : "alt"}" data-tab="${v}">${t}</button>`; }).join("");
+}
+function kpis() {
+  const attn = flat().filter(x => wst(x.r, x.w, T)[0] === "attention").length, aw = B.runs.reduce((n, r) => n + (r.acts ? r.acts.awaiting : 0), 0), {free} = roomMath();
+  const k = (a, n, l, hot) => `<button type="button" class="kpi ${hot ? "hot" : ""}" ${a}><b>${n}</b><span>${l}</span></button>`;
+  $("kpis").innerHTML = k('data-a="kpiatt"', attn, "Waves needing attention", attn > 0) + k('data-tab="queue"', aw, "Done, awaiting verification", aw > 0) + k('data-a="kpibench"', free, "Bench slots available", false);
+}
+function goTab(t) {
+  TAB = t; Object.entries(PANES).forEach(([k, id]) => $(id).classList.toggle("hidden", k !== t)); tabs();
+  if (t === "team") { team(); if (!TM) loadTeam(); }
+  else if (t === "lab") { if (LAB) labor(); else { $("lab").innerHTML = `<p class="k">Loading labor hours…</p>`; loadLab(); } }
+  else if (t === "room") room(); else if (t === "waves") wavesList(); else if (t === "wave") prof(); else if (t === "cal") calendar();
+  $("tabs").scrollIntoView({behavior: "smooth", block: "start"});
+}
+const WFL = [["all", "All"], ["attention", "Needs attention"], ["occupied", "In propagation"], ["post", "Post-transplant"], ["pend", "Not in room yet"], ["done", "Planted"]];
+const sbadge = (k, l) => k === "pend" || k === "done" ? `<span class="badge">${esc(l)}</span>` : wbadge(k, l);
+function wavesList() {
+  const el = $("waves"); if (!el) return;
+  const all = flat().filter(x => !FILTER || x.r.crop === FILTER).map(({r, w}) => { const [k, l] = wst(r, w, T); return {r, w, k, l, f: k === "ready" ? "occupied" : k}; });
+  const cnt = {}; WFL.forEach(([v]) => cnt[v] = v === "all" ? all.length : all.filter(x => x.f === v).length);
+  const vis = all.filter(x => WF === "all" || x.f === WF).sort((a, b) => a.w.sow < b.w.sow ? -1 : a.w.sow > b.w.sow ? 1 : a.r.runId.localeCompare(b.r.runId) || a.w.wave - b.w.wave);
+  const row = x => `<div class="q"><span class="n"><b>${esc(x.r.cropName)}</b> <span class="wv">W${x.w.wave}</span> <span class="k">of ${x.r.waves.length} · ${pf(x.r.platform)} · run ${esc(x.r.runId)}</span><br><span class="k">${x.w.trays ? x.w.trays + " trays" : "Direct-seeded, no trays"} · sow ${fmt(x.w.sow)} · transplant ${fmt(x.w.plant)}</span></span>${sbadge(x.k, x.l)}<button type="button" class="alt" data-sel="${esc(x.r.runId)}|${x.w.wave}">Open</button></div>`;
+  el.innerHTML = `<h2>Waves</h2><p class="k">Every wave with its tray count and its status on ${fmt(T)}${FILTER ? " (crop filter on: change it under Crops and waves)" : ""}. Press Open to work on a wave.</p>
+  <div class="chips" role="group" aria-label="Wave status filter">${WFL.map(([v, l]) => `<button type="button" class="${WF === v ? "on" : "alt"}" data-wf="${v}">${l} · ${cnt[v]}</button>`).join("")}</div>
+  ${vis.length ? vis.map(row).join("") : `<p class="k">No waves match this filter on ${fmt(T)}.</p>`}`;
 }
 const statusOf = a => { if (a.overridden) return "Overridden"; const q = actKind(a); return q.k === "done" ? "Verified" : q.k === "wait" ? "Submitted, awaiting your verification" : q.k === "prog" ? "In progress" + (q.tot ? " · " + q.sub + " of " + q.tot + " submitted" : "") : a.assignee ? "Assigned" : "Not assigned"; };
 function prof() {
   const el = $("prof"), r = SEL && B.runs.find(x => x.runId === SEL.runId), w = r && r.waves && r.waves.find(x => x.wave === SEL.wave);
-  if (!w) { el.innerHTML = `<h2>Wave profile</h2><p class="k">Select a wave from the list, or a tray on the map, to see its profile and hand out activities.</p>`; return; }
+  if (!w) { el.innerHTML = `<h2>Wave</h2><p class="k">No wave is open yet. Pick one from the Waves list, or tap a block or tray in the Propagation room.</p><div class="row"><button type="button" data-tab="waves">Go to Waves</button></div>`; return; }
   const [k, l] = wst(r, w, T), rs = RS[r.runId], dl = days(T, w.plant);
-  el.innerHTML = `<div class="row" style="margin-top:0"><h2 style="margin:0">${esc(r.cropName)} · W${w.wave} of ${r.waves.length}</h2>${k === "pend" || k === "done" ? `<span class="badge">${esc(l)}</span>` : wbadge(k, l)}</div>
+  el.innerHTML = `<div class="row" style="margin-top:0"><button type="button" class="alt" data-tab="waves">‹ Waves</button></div><div class="row" style="margin-top:0"><h2 style="margin:0">${esc(r.cropName)} · W${w.wave} of ${r.waves.length}</h2>${k === "pend" || k === "done" ? `<span class="badge">${esc(l)}</span>` : wbadge(k, l)}</div>
   <div class="facts"><div><span class="k">Sow date</span><b>${fmt(w.sow)}</b></div><div><span class="k">Transplant (DOB)</span><b>${fmt(w.plant)}</b><span class="k">${dl >= 0 ? "in " + dl + " d" : -dl + " d ago"}</span></div>
   <div><span class="k">Trays</span><b>${w.trays || "None (direct)"}${r.trayCells ? " · " + r.trayCells + "-cell" : ""}</b></div><div><span class="k">Material</span><b>${w.material ? w.material.toLocaleString() : "Bulk"}</b></div>
   <div><span class="k">Propagation</span><b>${esc(r.propLocation || "Bypasses nursery")}</b></div><div><span class="k">Goes to</span><b>${esc(r.location)}${r.bed ? " · bed " + esc(r.bed) : ""}</b></div>
@@ -469,6 +534,7 @@ const MOVEK = {REASSIGN:"Reassigned", UNASSIGN:"Removed", ASSIGN:"Added to team"
 const isMove = x => x.kind === "REASSIGN" || x.kind === "UNASSIGN" || (x.kind === "ASSIGN" && !!String(x.note || "").trim());
 const dk = (...p) => p.join("|"), dv = k => esc(DRAFT[k] || "");
 const UIOPEN = {};   // remembers which lists the manager expanded or collapsed across re-draws
+const opn = (k, def) => (k in UIOPEN ? UIOPEN[k] : def) ? "open" : "";
 document.addEventListener("toggle", e => { const k = e.target.dataset && e.target.dataset.ok; if (k) UIOPEN[k] = e.target.open; }, true);
 const isDone = a => actKind(a).k === "done";
 function actLabel(a) {   // [css, text] one plain status word per activity
@@ -521,10 +587,11 @@ function progCard(r, w) {
   const nx = !next.length ? "" : `<h3 style="margin:12px 0 4px">Next activities · ${cnt(next)}</h3>` + phs.map(g => { const fin = g.l.every(isDone), cur = g === cp, k = key("ph", g.p);
     const tag = fin ? "completed" : cur ? "up next" : "later";
     return `<details class="grp ${fin ? "dim" : ""} ${cur ? "cur" : ""}" data-ok="${esc(k)}" ${op(k, (cur && ready) || g.l.some(a => a.pending > 0))}><summary>${fin ? "✓ " : cur ? "▶ " : ""}${esc(g.p)} · ${cnt(g.l)} <span class="k">(${tag})</span></summary><ul class="al-list">${g.l.map(a => row(a, a.locked ? "locked until required activities are cleared" : "")).join("")}</ul></details>`; }).join("");
-  return `<section class="blk pc"><h3 style="margin:0 0 6px">Activities · run ${esc(r.runId)}</h3>
+  const pendN = all.reduce((n, a) => n + (a.overridden ? 0 : a.pending || 0), 0);
+  return `<details class="blk pc" data-ok="${esc(key("act"))}" ${op(key("act"), pendN > 0)}><summary>Activities · run ${esc(r.runId)} · ${doneN(all)} of ${all.length} complete${pendN ? ` <span class="badge wait">! ${pendN} to verify</span>` : ""}</summary>
     ${pre.length ? `<div class="light ${ready ? "go" : "stop"}"><i></i><span>${ready ? "Ready to sow" : "Not ready to sow"}<small>${ready ? "All required activities before sowing are cleared." : left + " required activit" + (left > 1 ? "ies" : "y") + " still to clear before sowing."}</small></span></div>` : ""}
     ${nextStep(r, w, rs, gates, next)}${req}${nx}
-    <p class="k" style="margin:8px 0 0;font-size:13px">Shared by all ${r.waves.length} wave${r.waves.length > 1 ? "s" : ""} of this run.</p></section>`;
+    <p class="k" style="margin:8px 0 0;font-size:13px">Shared by all ${r.waves.length} wave${r.waves.length > 1 ? "s" : ""} of this run.</p></details>`;
 }
 function ctls(a, r, w, gateCard) {   // manager controls for one activity
   const run = r.runId, id = a.id, gate = a.scope !== "crop-wave", c = [];
@@ -567,9 +634,9 @@ function gatesCard(r, w, rs) {
   const pre = list.filter(a => a.scope === "pre-sowing"), post = list.filter(a => a.scope === "post-transplant"), okN = x => x.filter(gateOk).length;
   const pend = list.reduce((n, a) => n + (a.overridden ? 0 : a.pending || 0), 0);
   const grp = (t, x) => x.length ? `<h3>${t} · ${okN(x)} of ${x.length} cleared</h3>${x.map(a => gateRow(a, r, w)).join("")}` : "";
-  return `<section class="blk"><div class="row" style="margin:0"><h3 style="margin:0">Stage gates</h3><span class="sp"></span>${pend ? `<button type="button" data-a="verifyall">Verify bed ready (${pend} done)</button>` : ""}</div>
+  return `<details class="blk" data-ok="${esc(r.runId + "|gates")}" ${opn(r.runId + "|gates", pend > 0)}><summary>Stage gates · ${okN(list)} of ${list.length} cleared${pend ? ` <span class="badge wait">! ${pend} to verify</span>` : ""}</summary>${pend ? `<div class="row" style="margin:0"><button type="button" data-a="verifyall">Verify bed ready (${pend} done)</button></div>` : ""}
     <p class="k">Pre-sowing steps must be done and verified, or overridden with a reason, before any later activity can start. Run ${esc(r.runId)}: ${(r.acts && r.acts.gatesOk) != null ? r.acts.gatesOk + " of " + r.acts.gates : "?"} cleared.</p>
-    ${grp("Pre-sowing: bench ready for sowing", pre)}${grp("Post-transplant: bench sanitizing", post)}${!rs && !list.length ? `<p class="k">Loading…</p>` : ""}</section>`;
+    ${grp("Pre-sowing: bench ready for sowing", pre)}${grp("Post-transplant: bench sanitizing", post)}${!rs && !list.length ? `<p class="k">Loading…</p>` : ""}</details>`;
 }
 function leafCard(r, w, rs) {
   if (r.direct) return `<section class="blk"><h3>First-leaf check</h3><p class="k">Not applicable: ${esc(r.cropName)} is direct-seeded or a crown.</p></section>`;
@@ -577,11 +644,12 @@ function leafCard(r, w, rs) {
   const feeds = rs ? rs.activities.filter(a => a.feed).map(a => a.id + " " + a.name) : [];
   const b = o === "PASS" ? `<span class="badge ok">✓ Pass</span>` : o === "OVERRIDDEN" ? `<span class="badge wait">! Overridden</span>` : o === "FAIL" ? `<span class="badge bad">✕ Fail</span>` : `<span class="badge open">○ Pending</span>`;
   const k = dk("l", r.runId, w.wave), kk = dk("lo", r.runId, w.wave);
-  return `<section class="blk"><div class="row" style="margin:0"><h3 style="margin:0">First-leaf check · wave ${w.wave}</h3>${b}</div>
+  const lk = r.runId + "|leaf|" + w.wave;
+  return `<details class="blk" data-ok="${esc(lk)}" ${opn(lk, !leafOk(w) && leafDue(w, T))}><summary>First-leaf check · wave ${w.wave} ${b}</summary>
     <p class="k">Growth feeds (${feeds.map(esc).join(", ") || "none"}) cannot start for this wave until the outcome is Pass or a manager overrides it.${ph ? " Check is due from " + fmt(ph.start) + " (germination ends)." : ""}</p>
     ${lf ? `<p class="k">Last set ${wt(lf.at)}${lf.by ? " by " + esc(lf.by) : ""}${lf.notes ? " · " + esc(lf.notes) : ""}</p>` : ""}
     <div class="frm"><input type="text" data-d="${k}" value="${dv(k)}" placeholder="Notes (optional)" aria-label="First-leaf notes"><button type="button" data-a="leaf" data-o="PASS">Pass</button><button type="button" class="alt" data-a="leaf" data-o="FAIL">Fail</button><button type="button" class="alt sm" data-a="leaf" data-o="PENDING">Reset</button></div>
-    ${o === "PASS" || o === "OVERRIDDEN" ? "" : `<details><summary>Override first-leaf check</summary><div class="frm"><input type="text" data-d="${kk}" value="${dv(kk)}" placeholder="Reason (required)" aria-label="Override reason"><button type="button" class="dng sm" data-a="leaf" data-o="OVERRIDDEN">Override</button></div></details>`}</section>`;
+    ${o === "PASS" || o === "OVERRIDDEN" ? "" : `<details><summary>Override first-leaf check</summary><div class="frm"><input type="text" data-d="${kk}" value="${dv(kk)}" placeholder="Reason (required)" aria-label="Override reason"><button type="button" class="dng sm" data-a="leaf" data-o="OVERRIDDEN">Override</button></div></details>`}</details>`;
 }
 function crewOf(rs, x) {   // worker status from this run's activities: in progress when a session is open, else assigned when tasks are open
   const open = rs.activities.filter(a => !isDone(a) && (a.assigneeIds || []).map(String).includes(String(x.id))).length;
@@ -603,12 +671,13 @@ function dispatch(r, w, rs) {
       ${tr.length ? `<details><summary>Trail (${tr.length})</summary>${tr.slice().reverse().map(h => `<div class="k">${wt(h.at)} · ${esc(KIND[h.kind] || h.kind)}${h.from ? " from " + esc(h.from) : ""}${h.to ? " to " + esc(h.to) : ""} · by ${esc(h.by)}${h.note ? " · Note: " + esc(h.note) : ""}</div>`).join("")}</details>` : ""}
       ${a.scope === "crop-wave" ? `<details ${a.pending ? "open" : ""}><summary>Manager actions${a.pending ? " · " + a.pending + " to verify" : ""}</summary>${ctls(a, r, w, false) || `<p class="k">Nothing to do.</p>`}</details>` : ""}</div>`; };
   const a = PICK.size, n = WPICK.size;
-  return `<section class="blk"><h3>Dispatch</h3><p class="k">Activities are shared by every wave of run ${esc(r.runId)}. Tick activities and workers, then assign. Ticking an assigned activity replaces its team; a short note is required and the change is kept in its trail (from, to, by, note).</p>
+  const dkey = r.runId + "|dispatch", asg = rs.activities.filter(x => x.assignee).length;
+  return `<details class="blk" data-ok="${esc(dkey)}" ${opn(dkey, PICK.size > 0 || WPICK.size > 0)}><summary>Dispatch · ${asg} of ${rs.activities.length} assigned</summary><p class="k">Activities are shared by every wave of run ${esc(r.runId)}. Tick activities and workers, then assign. Ticking an assigned activity replaces its team; a short note is required and the change is kept in its trail (from, to, by, note).</p>
     <div class="row"><button class="alt sm" type="button" data-a="pickall" data-m="un">Tick all unassigned</button><button class="alt sm" type="button" data-a="pickall" data-m="all">Tick all</button><button class="alt sm" type="button" data-a="pickall" data-m="none">Clear</button></div>
-    ${ph.map(([p, l]) => `<details ${l.some(x => !x.assignee && !x.completed) || l.some(x => x.pending > 0) ? "open" : ""}><summary>${esc(p)} · ${l.filter(x => x.assignee).length} of ${l.length} assigned</summary>${l.map(row).join("")}</details>`).join("")}
+    ${ph.map(([p, l]) => { const pk = r.runId + "|dp|" + p; return `<details data-ok="${esc(pk)}" ${opn(pk, l.some(x => !x.assignee && !x.completed) || l.some(x => x.pending > 0))}><summary>${esc(p)} · ${l.filter(x => x.assignee).length} of ${l.length} assigned</summary>${l.map(row).join("")}</details>`; }).join("")}
     <h3 id="wlist">Workers</h3>${B.workers.length ? `<div class="team">${B.workers.map(x => { const c = crewOf(rs, x); return `<label><input type="checkbox" data-wk="${esc(x.id)}" ${WPICK.has(String(x.id)) ? "checked" : ""}> <span>${esc(x.name)} <span class="k">${esc(x.role)}${c ? " · " + c : ""}</span></span></label>`; }).join("")}</div>` : `<p class="k">No active workers found in USERS.</p>`}
     ${rs.activities.some(x => PICK.has(x.id) && x.assignee && [...WPICK].sort().join(";") !== (x.assigneeIds || []).map(String).sort().join(";")) ? `<div class="frm"><input type="text" maxlength="300" data-d="${dk("an", r.runId)}" value="${dv(dk("an", r.runId))}" placeholder="Reassignment note (required): why is this changing?" aria-label="Reassignment note"></div>` : ""}
-    <div class="row"><label class="k">Due date (optional) <input type="date" id="due"></label><button type="button" id="asg" data-a="assign" ${a && n ? "" : "disabled"}>${a && n ? `Assign ${a} activit${a > 1 ? "ies" : "y"} to ${n} worker${n > 1 ? "s" : ""}` : "Assign"}</button></div></section>`;
+    <div class="row"><label class="k">Due date (optional) <input type="date" id="due"></label><button type="button" id="asg" data-a="assign" ${a && n ? "" : "disabled"}>${a && n ? `Assign ${a} activit${a > 1 ? "ies" : "y"} to ${n} worker${n > 1 ? "s" : ""}` : "Assign"}</button></div></details>`;
 }
 /* ---------- manager actions on the open wave ---------- */
 const BUSY = { n: 0 };
@@ -701,6 +770,8 @@ async function doFixMove(id) {
 function paneAct(d) {   // clicks on the wave pane's data-a buttons
   switch (d.a) {
     case "filt": RFILT = d.f; room(); break;
+    case "kpiatt": WF = "attention"; goTab("waves"); break;
+    case "kpibench": RV = "bench"; goTab("room"); break;
     case "pickall": { const c = cur(); if (c && c.rs) { PICK.clear(); c.rs.activities.forEach(a => { if (a.hold && !a.assignee) return; if (d.m === "all" || (d.m === "un" && !a.assignee) || (d.m === "ids" && (d.ids || "").split(",").includes(a.id))) PICK.add(a.id); }); prof(); if (d.m === "ids") { const el = $("wlist"); if (el) el.scrollIntoView({behavior:"smooth", block:"start"}); } } break; }
     case "rgo": doReassign(d.id); break; case "fixmove": doFixMove(d.id); break;
     case "verify": doVerify(d.id); break; case "vw": doVerifyWork(d.id, d.log); break; case "verifyphase": doVerifyPhase(d.p); break; case "verifyall": doVerifyAll(); break;
@@ -722,7 +793,7 @@ function queue() {
   B.runs.forEach(r => { if (!r.error && r.acts.awaiting > 0) items.push({ver: true, r, w: awWave(r), d: days(T, awWave(r).sow), p: "att", why: `${r.acts.awaiting} activit${r.acts.awaiting > 1 ? "ies" : "y"} done, awaiting verification (wave ${awWave(r).wave})`}); });
   items.sort((a, b) => (b.ver ? 1 : 0) - (a.ver ? 1 : 0) || a.d - b.d);   // finished work waiting on the manager goes first (a worker is blocked), then by sow date
   const shown = QALL ? items : items.slice(0, 30);   // the plan can leave dozens of unrun plantings due at once, so show the most urgent first
-  $("qb").textContent = `Assignment queue (${items.length})`; QI.length = 0; shown.filter(i => i.init).forEach(i => QI.push(i));
+  QN = items.length; tabs(); QI.length = 0; shown.filter(i => i.init).forEach(i => QI.push(i));
   const lab = {must: "Must do", att: "Attention", rtn: "Routine"}, todo = [...new Set(shown.filter(i => i.init).map(i => i.r.runId))];
   const row = i => i.gap ? `<div class="q"><span class="pri ${i.p}">${lab[i.p]}</span><span class="n"><b>${esc(i.g.cropName)} (${pf(i.g.platform)}), plant ${fmt(i.i.date)}</b> <span class="k">${esc(i.why)} · sow ${fmt(i.sow)}</span></span><button type="button" data-mk="${esc(i.g.crop + "|" + i.g.platform)}|${i.i.date}">Create run</button></div>`
     : i.ver ? `<div class="q"><span class="pri ${i.p}">${lab[i.p]}</span><span class="n"><b>${esc(i.r.cropName)} · run ${esc(i.r.runId)}</b> <span class="k">${esc(i.why)}</span></span><button type="button" class="alt" data-sel="${esc(i.r.runId)}|${i.w.wave}">Open</button></div>`
@@ -748,7 +819,10 @@ document.addEventListener("input", e => { const t = e.target.dataset || {}, r = 
 document.addEventListener("toggle", e => { const k = e.target.dataset && e.target.dataset.g; if (k) e.target.open ? OPENG.add(k) : OPENG.delete(k); }, true);
 document.addEventListener("click", async e => {
   const b = e.target.closest("button"); if (!b) return; const d = b.dataset, rs = SEL && RS[SEL.runId];
-  if (d.sel) { const [id, w] = d.sel.split("|"); pickRun(id, +w); TRAY = null; render(); $("prof").scrollIntoView({behavior:"smooth", block:"nearest"}); }
+  if (d.tab) goTab(d.tab);
+  else if (d.wf) { WF = d.wf; wavesList(); }
+  else if (d.rview) { RV = d.rview; room(); }
+  else if (d.sel) { const [id, w] = d.sel.split("|"); pickRun(id, +w); TRAY = null; render(); goTab("wave"); }
   else if (d.tray !== undefined) { const c = CELLS[+d.tray]; pickRun(c.r.runId, c.w.wave); TRAY = +d.tray; render(); }
   else if (d.init) { const [id, w] = d.init.split("|"); initWaves(id, w === "all" ? "all" : +w); }
   else if (d.initq) { const by = {}; QI.forEach(i => (by[i.r.runId] = by[i.r.runId] || []).push(i.w.wave)); for (const [id, ws] of Object.entries(by)) await initWaves(id, ws); }
@@ -765,7 +839,7 @@ document.addEventListener("click", async e => {
   else if (d.cm !== undefined) { if (d.cm === "0") { CM = localToday().slice(0, 7); } else { const y = +CM.slice(0, 4), m = +CM.slice(5, 7) - 1 + +d.cm, x = new Date(Date.UTC(y, m, 1)); CM = x.toISOString().slice(0, 7); } CD = null; calendar(); }
   else if (d.cd) { CD = d.cd; CM = d.cd.slice(0, 7); CV = "month"; calendar(); }
   else if (d.tload) loadTeam();
-  else if (d.tclose) { $("team").classList.add("hidden"); TNOTE = ""; }
+  else if (d.tclose) { TNOTE = ""; goTab("cal"); }
   else if (d.tadd) { const nm = $("tn").value.trim(), wp = $("tp").value.trim();
     if (!nm) return toast("Type the worker's name.", true);
     if (wp && !/^\d{4,8}$/.test(wp)) return toast("The PIN must be 4 to 8 digits, or leave it blank to generate one.", true);
@@ -773,7 +847,7 @@ document.addEventListener("click", async e => {
   else if (d.treset) { const w = TM && TM.workers.find(x => x.id === d.treset);
     if (w && confirm(`Reset the PIN for ${w.name} (${w.id})?\n\nTheir current PIN stops working at the next sign-in and a new one is generated. It is shown once.`)) teamAct({action:"resetPin", workerId:d.treset}, b); }
   else if (d.lload !== undefined) { LAB = null; loadLab(); }
-  else if (d.lclose !== undefined) $("lab").classList.add("hidden");
+  else if (d.lclose !== undefined) goTab("cal");
   else if (d.lshow) { LB.show = d.lshow; labPreset(); labor(); }
   else if (d.lview) { LB.view = d.lview; labor(); }
   else if (d.lcsv !== undefined) labCsv();
@@ -781,11 +855,7 @@ document.addEventListener("click", async e => {
   else if (d.cprint) window.print();
   else if (d.qall !== undefined) { QALL = d.qall === "1"; queue(); }
 });
-$("qb").onclick = () => $("qp").classList.toggle("hidden");
-$("cb").onclick = () => $("cal").classList.toggle("hidden");
-$("lb").onclick = () => { const el = $("lab"); el.classList.toggle("hidden"); if (!el.classList.contains("hidden")) { if (LAB) labor(); else { el.innerHTML = `<p class="k">Loading labor hours…</p>`; loadLab(); } } };
 document.addEventListener("change", e => { if (e.target.id === "lf" || e.target.id === "lt") { LB[e.target.id === "lf" ? "from" : "to"] = e.target.value || LB[e.target.id === "lf" ? "from" : "to"]; LB.show = ""; labor(); } });
-$("tb").onclick = () => { const el = $("team"); el.classList.toggle("hidden"); if (!el.classList.contains("hidden")) { team(); if (!TM) loadTeam(); else el.scrollIntoView({behavior:"smooth", block:"nearest"}); } };
 $("refresh").onclick = () => { RS = {}; CAL = null; toast("Refreshing…"); load(); };
 const sget = () => { try { return JSON.parse(localStorage.getItem("board_session") || "null"); } catch (e) { return null; } };
 const sput = v => { try { v ? localStorage.setItem("board_session", JSON.stringify(v)) : localStorage.removeItem("board_session"); } catch (e) {} };
@@ -802,6 +872,7 @@ async function doLogin() {
 $("lgo").onclick = doLogin;
 ["lu", "lp"].forEach(id => $(id).addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); }));
 $("logout").onclick = async () => { try { await post({action:"logout"}); } catch (e) {} signOut(); };
+tabs();
 { const s0 = sget(); let m = ""; try { m = sessionStorage.getItem("board_msg") || ""; sessionStorage.removeItem("board_msg"); } catch (e) {}
   if (s0 && s0.token) { signedIn(s0); load(); } else showLogin(m); }
 </script></body></html>
