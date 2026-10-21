@@ -554,7 +554,7 @@ function actLabel(a) {   // [css, text] one plain status word per activity
   const q = actKind(a), n = a.scope === "crop-wave" && WV ? " · W" + WV.wave : "";
   if (q.k === "done") return ["ok", "✓ Completed · verified" + n];
   if (q.k === "wait") return ["wait", "! Submitted · needs verification" + n];
-  if (q.k === "prog") return ["prog", "◐ In progress" + (q.tot ? " · " + q.sub + " of " + q.tot + " submitted" + (q.ver ? ", " + q.ver + " verified" : "") : "") + ((q.miss || []).length ? " · waiting on " + q.miss.map(esc).join(", ") : "") + n];
+  if (q.k === "prog") return ["prog", ((a.sessions || []).some(s => !(a.scope === "crop-wave" && WV) || Number(s.wave) === WV.wave) ? "◐ Working now" : "◐ Partly done, nobody working now") + (q.tot ? " · " + q.sub + " of " + q.tot + " submitted" + (q.ver ? ", " + q.ver + " verified" : "") : "") + ((q.miss || []).length ? " · waiting on " + q.miss.map(esc).join(", ") : "") + n];
   return a.assignee ? ["open", "◔ Assigned"] : ["wait", "○ Not assigned"];
 }
 function nextStep(r, w, rs, gates, next) {   // one clear instruction: what the manager does now
