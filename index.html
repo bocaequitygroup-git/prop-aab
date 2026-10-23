@@ -149,7 +149,7 @@ details.cg{border:1px solid var(--line);padding:4px 10px}details.cg>summary{padd
 <label>Description <textarea id="aad" maxlength="300" placeholder="What the worker does, in a sentence or two"></textarea></label>
 <p class="k" style="margin:0">The system fills in the ID, group, timing and scope, and adds it to every run.</p>
 <details><summary>More options (optional)</summary>
-<label>Group <select id="aap"><option value="">Automatic (Phase 7: Added activities)</option><option value="Phase 1: Pre-sowing and media preparation">Phase 1: Pre-sowing and media preparation</option><option value="Phase 2: Seeding and batching">Phase 2: Seeding and batching</option><option value="Phase 3: Germination and early emergence">Phase 3: Germination and early emergence</option><option value="Phase 4: Grow-out and crop maintenance">Phase 4: Grow-out and crop maintenance</option><option value="Phase 5: Hardening off and pre-delivery">Phase 5: Hardening off and pre-delivery</option><option value="Phase 6: Fulfillment and delivery">Phase 6: Fulfillment and delivery</option></select></label>
+<label>Group <select id="aap"><option value="">Automatic (Added activities)</option><option value="Phase 1: Pre-sowing and media preparation">Phase 1: Pre-sowing and media preparation</option><option value="Phase 2: Seeding and batching">Phase 2: Seeding and batching</option><option value="Phase 3: Germination and early emergence">Phase 3: Germination and early emergence</option><option value="Phase 4: Grow-out and crop maintenance">Phase 4: Grow-out and crop maintenance</option><option value="Phase 5: Hardening off and pre-delivery">Phase 5: Hardening off and pre-delivery</option><option value="Phase 6: Fulfillment and delivery">Phase 6: Fulfillment and delivery</option></select></label>
 <label class="chk"><input type="checkbox" id="aac"> Workers record a quantity when they finish</label>
 </details>
 <div id="aae" class="aae hidden" role="alert"></div>
@@ -193,7 +193,9 @@ function stat(r, w, t) {
   const ph = (w.phases || []).find(p => p.start <= t && t < p.end);
   return ["occ", r.direct ? "Direct-seeded, growing" : "In propagation" + (ph ? " · " + ph.phase : "")];
 }
+let CALP = null;   // calendar request started alongside the board request, so the two server calls overlap instead of queueing
 async function load(quiet) {
+  if (!CAL && !CALP) { CALP = get({action:"calendar"}); CALP.catch(() => {}); }
   try { B = await get({action:"board"}); $("conn").textContent = "Connected · " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}); $("conn").className = "conn"; $("err").classList.add("hidden"); render(); if (!CAL) loadCal(); }
   catch (e) { $("conn").textContent = "Offline"; $("conn").className = "conn off"; $("err").textContent = e.message; $("err").classList.remove("hidden"); if (!quiet) toast(e.message, true); }
 }
@@ -259,9 +261,9 @@ async function mkRuns(key, dates) {   // one saveRun per planting date (1 wave e
 
 /* ---------- Production calendar: sowing and transplant / direct-seeding dates, read from the workbook via ?action=calendar ---------- */
 async function loadCal() {
-  try { CAL = await get({action:"calendar"}); }
+  try { CAL = await (CALP || get({action:"calendar"})); }
   catch (e) { CAL = null; $("cal").innerHTML = `<h2>Production calendar</h2><div class="note">${esc(/Unknown action/.test(e.message) ? "The server does not have the calendar yet. Deploy the latest Code_pro.gs as a new version, then press Refresh." : e.message)}</div>`; return; }
-  calendar();
+  CALP = null; calendar();
 }
 const CLAB = {prop: ["Sowing", "sowing", "sowings"], plant: ["Transplant / direct seeding", "transplant or direct seeding", "transplants and direct seedings"]};
 const calDate = (e, l) => l === "prop" ? e.sow : e.plant;
