@@ -106,11 +106,19 @@ details.cg{border:1px solid var(--line);padding:4px 10px}details.cg>summary{padd
 #waves .wv{display:inline-block;background:var(--ink);color:var(--card);border-radius:6px;padding:0 7px;font-weight:700}
 #waves .chips button.on{background:var(--acc);color:var(--bg);border:0}
 #waves .q{padding:10px 0}
+
+#addact{position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:16px}
+#addact .card{width:min(440px,100%);display:grid;gap:10px;margin:0;max-height:92vh;overflow:auto;background:var(--card);color:var(--ink);border:2px solid var(--edge,var(--line));border-radius:14px;padding:16px}
+#addact h2{margin:0}#addact label{display:grid;gap:3px;font-weight:700}#addact label.chk{display:flex;gap:8px;align-items:center;font-weight:600}
+#addact input[type=text],#addact textarea,#addact select{width:100%;font:inherit;padding:8px 10px;border:2px solid var(--edge,var(--line));border-radius:10px;background:var(--card);color:var(--ink)}
+#addact textarea{resize:vertical;min-height:84px}#addact input[type=checkbox]{width:20px;height:20px}
+#addact .aae{background:var(--bads,var(--warns));color:var(--bad);border:2px solid var(--bad);border-radius:10px;padding:8px 10px;font-weight:700}
+#addact .arow{display:flex;gap:8px;flex-wrap:wrap}#addact details{display:grid;gap:8px}#addact summary{cursor:pointer;font-weight:700;min-height:32px}
 </style></head><body>
 <header>
 <h1>Activity Assignment Board</h1><span class="k">Ngapori Ranch · Propagation</span>
 <span class="conn off" id="conn">Connecting…</span><span class="sp"></span>
-<span class="k" id="who"></span><button class="alt" id="logout" type="button">Log out</button>
+<span class="k" id="who"></span><button class="alt" id="bAddAct" type="button" data-addact>+ Add activity</button><button class="alt" id="logout" type="button">Log out</button>
 <button class="alt" id="refresh" type="button">Refresh</button>
 </header>
 <div class="leg"><span><i style="background:var(--mute);opacity:.6"></i>Not initiated</span><span><i style="background:var(--acc);opacity:.45"></i>Initiated</span><span><i style="background:var(--acc)"></i>In propagation</span><span><i style="background:var(--warn)"></i>Needs attention</span><span><i style="background:var(--line)"></i>Planted</span><span><i style="border:1px solid var(--line)"></i>Empty tray</span><span><i style="border:1px dashed var(--mute)"></i>Planned, no run</span></div>
@@ -135,6 +143,18 @@ details.cg{border:1px solid var(--line);padding:4px 10px}details.cg>summary{padd
 <section class="card hidden" id="team"></section>
 <section class="card hidden" id="lab"></section>
 </main></div>
+<div id="addact" class="hidden" role="dialog" aria-modal="true" aria-labelledby="aat"><div class="card">
+<h2 id="aat">Add activity</h2>
+<label>Activity name <input id="aan" type="text" maxlength="60" autocomplete="off" placeholder="e.g. Tray flipping"></label>
+<label>Description <textarea id="aad" maxlength="300" placeholder="What the worker does, in a sentence or two"></textarea></label>
+<p class="k" style="margin:0">The system fills in the ID, group, timing and scope, and adds it to every run.</p>
+<details><summary>More options (optional)</summary>
+<label>Group <select id="aap"><option value="">Automatic (Phase 7: Added activities)</option><option value="Phase 1: Pre-sowing and media preparation">Phase 1: Pre-sowing and media preparation</option><option value="Phase 2: Seeding and batching">Phase 2: Seeding and batching</option><option value="Phase 3: Germination and early emergence">Phase 3: Germination and early emergence</option><option value="Phase 4: Grow-out and crop maintenance">Phase 4: Grow-out and crop maintenance</option><option value="Phase 5: Hardening off and pre-delivery">Phase 5: Hardening off and pre-delivery</option><option value="Phase 6: Fulfillment and delivery">Phase 6: Fulfillment and delivery</option></select></label>
+<label class="chk"><input type="checkbox" id="aac"> Workers record a quantity when they finish</label>
+</details>
+<div id="aae" class="aae hidden" role="alert"></div>
+<div class="arow"><button id="aago" type="button">Add activity</button><button id="aax" type="button" class="alt">Cancel</button></div>
+</div></div>
 <div id="toast" class="hidden"></div>
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbz7qyhFT5BRUpiqLCnjtT8gRX-UQ-I0lQhF__H6dgCU_Rql2WFOMuNm-YLXazi0Zrir_g/exec"; // Apps Script web app URL (ends in /exec)
@@ -899,6 +919,29 @@ document.addEventListener("click", async e => {
   else if (d.qall !== undefined) { QALL = d.qall === "1"; queue(); }
 });
 document.addEventListener("change", e => { if (e.target.id === "lf" || e.target.id === "lt") { LB[e.target.id === "lf" ? "from" : "to"] = e.target.value || LB[e.target.id === "lf" ? "from" : "to"]; LB.show = ""; labor(); } });
+
+/* ---------- add activity (manager): the server assigns ID, group, timing, scope ---------- */
+function addActErr(m) { const el = $("aae"); el.textContent = m || ""; el.classList.toggle("hidden", !m); }
+function openAddAct() { $("aan").value = ""; $("aad").value = ""; $("aap").value = ""; $("aac").checked = false; addActErr(""); $("addact").classList.remove("hidden"); setTimeout(() => $("aan").focus(), 0); }
+function closeAddAct() { $("addact").classList.add("hidden"); }
+async function submitAddAct() {
+  const name = $("aan").value.trim().replace(/\s+/g, " "), description = $("aad").value.trim();
+  if (!name) { addActErr("Type the activity name."); $("aan").focus(); return; }
+  if (!description) { addActErr("Add a short description of the work."); $("aad").focus(); return; }
+  const go = $("aago"); go.disabled = true; addActErr("");
+  try {
+    const r = await post({action:"addActivity", name, description, phase:$("aap").value, requiresCount:$("aac").checked});
+    closeAddAct(); toast("Added " + r.activity.id + " · " + r.activity.name + (r.runsUpdated ? " to " + r.runsUpdated + " runs" : ""));
+    await ADDACT_REFRESH();
+  } catch (e) { addActErr(/Unknown action/i.test(e.message) ? "The server does not know this feature yet. Deploy the latest Code_pro.gs (with addActivity) as a new version." : e.message); }
+  finally { go.disabled = false; }
+}
+$("aago").onclick = submitAddAct; $("aax").onclick = closeAddAct;
+$("addact").addEventListener("click", e => { if (e.target === $("addact")) closeAddAct(); });
+$("aan").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("aad").focus(); } });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("addact").classList.contains("hidden")) closeAddAct(); });
+document.addEventListener("click", e => { if (e.target.closest("[data-addact]")) openAddAct(); });
+const ADDACT_REFRESH = async () => { const id = SEL && SEL.runId; RS = {}; CAL = null; await load(true); if (id) await loadRun(id); };
 $("refresh").onclick = () => { RS = {}; CAL = null; toast("Refreshing…"); load(); };
 const sget = () => { try { return JSON.parse(localStorage.getItem("board_session") || "null"); } catch (e) { return null; } };
 const sput = v => { try { v ? localStorage.setItem("board_session", JSON.stringify(v)) : localStorage.removeItem("board_session"); } catch (e) {} };
