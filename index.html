@@ -261,9 +261,10 @@ async function mkRuns(key, dates) {   // one saveRun per planting date (1 wave e
 
 /* ---------- Production calendar: sowing and transplant / direct-seeding dates, read from the workbook via ?action=calendar ---------- */
 async function loadCal() {
+  try { if (!CAL) { const c = JSON.parse(localStorage.getItem("aab_cal") || "null"); if (c && c.d && c.d.events) { CAL = c.d; calendar(); } } } catch (e) {}   // show the last calendar from this device at once, then refresh it below
   try { CAL = await (CALP || get({action:"calendar"})); }
   catch (e) { CAL = null; $("cal").innerHTML = `<h2>Production calendar</h2><div class="note">${esc(/Unknown action/.test(e.message) ? "The server does not have the calendar yet. Deploy the latest Code_pro.gs as a new version, then press Refresh." : e.message)}</div>`; return; }
-  CALP = null; calendar();
+  CALP = null; try { if (CAL) localStorage.setItem("aab_cal", JSON.stringify({d: CAL})); } catch (e) {} calendar();
 }
 const CLAB = {prop: ["Sowing", "sowing", "sowings"], plant: ["Transplant / direct seeding", "transplant or direct seeding", "transplants and direct seedings"]};
 const calDate = (e, l) => l === "prop" ? e.sow : e.plant;
