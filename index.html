@@ -345,7 +345,7 @@ async function teamAct(body, b) {   // add / reset: the server returns the refre
 }
 
 /* ---------- Labor Hours: closed work sessions from the permanent ledger (FIELD_ACTIVITY_LOG, via the read-only ?action=log feed). ---------- */
-let LAB = null, LB = {show: "7", from: "", to: "", view: "budget", run: "", wave: ""};   // LAB = effective ledger entries; LB = date range, preset and view
+let LAB = null, LB = {show: "7", from: "", to: "", view: "budget"};   // LAB = effective ledger entries; LB = date range, preset and view
 const LSH = {"7": "Last 7 days", "30": "Last 30 days", all: "All time"}, LVW = {budget: "Budget vs Actual", worker: "By worker", activity: "By activity", sessions: "All sessions"}, NOWK = "No worker recorded";
 const ldate = s => { s = String(s || ""); if (s.length <= 10) return s; const d = new Date(s); return isNaN(d) ? s.slice(0, 10) : new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
 const hm = h => { const m = Math.round(h * 60); return Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0"); };
@@ -386,36 +386,39 @@ function labView() {
 const labBud = keys => { try {   // advisory only: budget vs the recorded hours of every production unit these sessions belong to (a unit counts once, in full)
   let b = 0, a = 0, n = 0, all = 0; (keys || []).forEach(k => { const u = LBA && LBA[k]; if (!u) return; all += u.actualH; if (u.budgetH != null) { b += u.budgetH; a += u.actualH; n++; } });
   if (!n) return ["", all ? hm(all) : "", "", "", "Budget Unavailable"];
-  const v = a - b, sg = x => (x > 0.0004 ? "+" : x < -0.0004 ? "−" : "") + hm(Math.abs(x));
-  return [hm(b), hm(a), sg(v), b > 0 ? (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v / b * 100).toFixed(1) + "%" : "", v > 0.0004 ? "Over Budget" : "Within Budget"]; } catch (e) { return ["", "", "", "", "Budget Unavailable"]; } };
-/* ---------- Budget vs Actual (advisory): allowed labor hours against the recorded labor hours of one run, whole run or one wave ----------
-   Crop-wave activities are compared within their wave; pre-sowing activities once per run. Each unit counts every worker's recorded hours once. */
-const bh = x => x.toFixed(2) + " h", bsg = x => (x > 0.0004 ? "+" : x < -0.0004 ? "−" : "") + Math.abs(x).toFixed(2) + " h", bpc = p => (p > 0 ? "+" : p < 0 ? "−" : "") + Math.abs(p).toFixed(1) + "%";
+  const v = Math.round(a * 100) / 100 - Math.round(b * 100) / 100, sg = x => (x > 0.004 ? "+" : x < -0.004 ? "−" : "") + hm(Math.abs(x));
+  return [hm(b), hm(a), sg(v), b > 0 ? (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v / b * 100).toFixed(1) + "%" : "", v > 0.004 ? "Over Budget" : v < -0.004 ? "Under Budget" : "At Budget"]; } catch (e) { return ["", "", "", "", "Budget Unavailable"]; } };
+/* ---------- Budget vs Actual (advisory): system-wide and per user ----------
+   System-wide: every production unit (a crop-wave activity on one wave, or a pre-sowing activity once per run) is compared ONCE: all workers' recorded hours against its budget.
+   Per user: no per-worker allocation of an activity budget is configured, so a worker is never compared with an activity budget in full. Each worker shows their own actual hours
+   and, separately, the activity-level status of the activities they worked on. Rules: Over Budget (hours over) | At Budget (equal) | Under Budget (hours under) | Budget Unavailable. */
+const bh = x => x.toFixed(2) + " h", bpc = p => (p > 0 ? "+" : p < 0 ? "−" : "") + Math.abs(p).toFixed(1) + "%", bn = n => n + " activit" + (n === 1 ? "y" : "ies");
+const bst = u => u.status === "Over Budget" ? "Over Budget by " + bh(u.varianceH) : u.status === "Under Budget" ? "Under Budget by " + bh(-u.varianceH) : u.status;
 function budView() { try {
   const U = LBA ? Object.keys(LBA).map(k => LBA[k]) : null; if (!U) return {err: "Budget Unavailable: the budget comparison could not be loaded. Press Reload."};
-  const byRun = new Map(); U.forEach(u => { const o = byRun.get(u.runId) || {id: u.runId, n: 0, a: 0}; o.n++; o.a += u.actualH; byRun.set(u.runId, o); });
-  if (!byRun.size) return {err: "No labor hours have been recorded against any run yet."};
-  const runs = [...byRun.values()].sort((p, q) => q.n - p.n || q.a - p.a), id = byRun.has(LB.run) ? LB.run : runs[0].id, sum = (l, f) => l.reduce((n, u) => n + f(u), 0);
-  const rn = rid => { const r = (B.runs || []).find(x => x.runId === rid) || {}; return (r.cropName || r.crop || "Run") + " · " + rid; };
-  const mine = U.filter(u => u.runId === id), waves = [...new Set(mine.filter(u => u.scope === "crop-wave" && u.wave != null).map(u => u.wave))].sort((p, q) => p - q);
-  const wv = LB.wave !== "" && waves.includes(Number(LB.wave)) ? Number(LB.wave) : null;
-  const sc = mine.filter(u => wv == null || (u.scope === "crop-wave" && u.wave === wv)).sort((p, q) => String(p.activityId).localeCompare(String(q.activityId)) || (p.wave || 0) - (q.wave || 0));
-  const cmp = sc.filter(u => u.budgetH != null), bud = sum(cmp, u => u.budgetH), act = sum(cmp, u => u.actualH), vr = act - bud, pc = bud > 0 ? vr / bud * 100 : null;
-  const noB = sc.filter(u => u.budgetH == null), st = cmp.length ? (vr > 0.0004 ? "Over Budget" : "Within Budget") : "Budget Unavailable", cls = st === "Over Budget" ? "bad" : st === "Within Budget" ? "ok" : "";
-  const mins = Math.round(Math.abs(vr) * 60), vcap = !cmp.length ? "Budget Unavailable" : mins === 0 ? "On budget" : (mins >= 60 ? Math.floor(mins / 60) + " h " + (mins % 60) + " min" : mins + " minutes") + (vr > 0 ? " over" : " under");
-  const rows = sc.map(u => { const s = u.status, un = u.scope === "pre-sowing" ? "Whole run" : "Wave " + u.wave;
-    return {cls: s === "Over Budget" ? "over" : "", c: [u.activityId + " " + u.activity, un, u.budgetH == null ? "" : bh(u.budgetH), bh(u.actualH), u.varianceH == null ? "" : bsg(u.varianceH), u.variancePct == null ? "" : bpc(u.variancePct), s, u.sessions],
-      r: [id, u.activityId, u.activity, un, u.budgetH == null ? "" : u.budgetH, u.actualH, u.varianceH == null ? "" : u.varianceH, u.variancePct == null ? "" : u.variancePct, s, u.sessions]}; });
-  const sel = `<div class="row"><label class="k">Run <select id="lbr">${runs.map(r => `<option value="${esc(r.id)}" ${r.id === id ? "selected" : ""}>${esc(rn(r.id))}</option>`).join("")}</select></label>
-    <label class="k">Production unit <select id="lbw"><option value="">Whole run (pre-sowing + all waves)</option>${waves.map(w => `<option value="${w}" ${w === wv ? "selected" : ""}>Wave ${w} (crop-wave activities)</option>`).join("")}</select></label></div>`;
+  if (!U.length) return {err: "No labor hours have been recorded against any activity yet."};
+  const S = {"Over Budget": {n: 0, h: 0}, "At Budget": {n: 0, h: 0}, "Under Budget": {n: 0, h: 0}, "Budget Unavailable": {n: 0, h: 0}}, usr = new Map();
+  U.forEach(u => { const s = S[u.status] || S["Budget Unavailable"]; s.n++; s.h += u.status === "Over Budget" ? u.varianceH : u.status === "Under Budget" ? -u.varianceH : u.status === "Budget Unavailable" ? u.actualH : 0;
+    Object.keys(u.byWorker || {}).forEach(w => { const o = usr.get(w) || {w, h: 0, c: {"Over Budget": new Set(), "At Budget": new Set(), "Under Budget": new Set(), "Budget Unavailable": new Set()}}; usr.set(w, o); o.h += u.byWorker[w]; (o.c[u.status] || o.c["Budget Unavailable"]).add(u.key); }); });
   const tile = (l, v, c, k) => `<div class="${c || ""}"><span class="k">${l}</span><b>${v}</b><span class="k">${k}</span></div>`;
-  const html = `${sel}<div class="bt">${tile("Budgeted labor", cmp.length ? bh(bud) : "Budget Unavailable", "", "Activities with recorded hours")}${tile("Actual labor", bh(cmp.length ? act : sum(sc, u => u.actualH)), "", "All workers, counted once")}${tile("Variance", cmp.length ? bsg(vr) : "", cls, vcap)}${tile("Variance %", pc == null ? "" : bpc(pc), cls, st)}</div>
-    ${noB.length ? `<p class="k">${bh(sum(noB, u => u.actualH))} recorded on ${noB.length} activit${noB.length > 1 ? "ies" : "y"} with no budget (Budget Unavailable). Not included in the totals above.</p>` : ""}
-    ${wv != null ? `<p class="k">Pre-sowing activities are counted once per run: choose Whole run to include them.</p>` : ""}
-    <h3 style="margin:12px 0 4px">Activity budget breakdown</h3>
-    ${rows.length ? `<div class="tw"><table class="lt"><tr>${["Activity", "Unit", "Budget", "Actual", "Variance", "Variance %", "Status", "Sessions"].map(x => `<th>${x}</th>`).join("")}</tr>${rows.map(r => `<tr class="${r.cls}">${r.c.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</table></div>` : `<p class="k">No recorded hours for this selection.</p>`}
-    <p class="k">Advisory only: it never blocks a worker or changes a task. Budget is each activity's own configured rate. Actual is every worker's recorded hours from the permanent log, counted once. Crop-wave activities are compared within their wave; pre-sowing activities once per run. The date range does not apply to this view. Use By worker, By activity and All sessions to see the individual time logs.</p>`;
-  return {html, rows, head: ["Run", "Activity ID", "Activity", "Unit", "Budget (h)", "Actual (h)", "Variance (h)", "Variance %", "Status", "Sessions"], file: "labor-budget-vs-actual-" + id + (wv != null ? "-wave" + wv : "")};
+  const O = S["Over Budget"], A = S["At Budget"], D = S["Under Budget"], N = S["Budget Unavailable"];
+  const users = [...usr.values()].sort((p, q) => q.h - p.h), cn = (o, k) => o.c[k].size ? bn(o.c[k].size) : "";
+  const order = {"Over Budget": 0, "At Budget": 1, "Under Budget": 2, "Budget Unavailable": 3}, runs = id => { const r = (B.runs || []).find(x => x.runId === id) || {}; return (r.cropName || r.crop || "Run") + " · " + id; };
+  const acts = U.slice().sort((p, q) => order[p.status] - order[q.status] || (q.varianceH || 0) - (p.varianceH || 0) || String(p.activityId).localeCompare(String(q.activityId)));
+  const rows = acts.map(u => { const un = u.scope === "pre-sowing" ? "Whole run" : "Wave " + u.wave;
+    return {c: [u.activityId + " " + u.activity, runs(u.runId), un, u.budgetH == null ? "" : bh(u.budgetH), bh(u.actualH), bst(u), u.variancePct == null ? "" : bpc(u.variancePct)], cls: u.status === "Over Budget" ? "over" : "",
+      r: [u.runId, u.activityId, u.activity, un, u.budgetH == null ? "" : u.budgetH, u.actualH, u.varianceH == null ? "" : u.varianceH, u.variancePct == null ? "" : u.variancePct, u.status, u.sessions]}; });
+  const tbl = (head, body) => `<div class="tw"><table class="lt"><tr>${head.map(x => `<th>${x}</th>`).join("")}</tr>${body}</table></div>`;
+  const html = `<h3 style="margin:8px 0 4px">System-wide</h3>
+    <div class="bt">${tile("Over Budget", bh(O.h), O.n ? "bad" : "", bn(O.n))}${tile("At Budget", bn(A.n), "", "actual equals budget")}${tile("Under Budget", bh(D.h), D.n ? "ok" : "", bn(D.n))}${tile("Budget Unavailable", bn(N.n), "", bh(N.h) + " recorded, not compared")}</div>
+    <p class="k">Each activity (one wave, or the whole run for pre-sowing activities) is compared once: all workers' recorded hours against its budget. Sessions are never counted twice.</p>
+    <h3 style="margin:12px 0 4px">By user</h3>
+    ${tbl(["User", "Actual hours", "Activities worked", "Over Budget", "At Budget", "Under Budget", "Budget Unavailable"], users.map(o => `<tr><td>${esc(o.w)}</td><td>${bh(o.h)}</td><td>${bn(new Set([].concat(...Object.values(o.c).map(s => [...s]))).size)}</td><td>${cn(o, "Over Budget")}</td><td>${cn(o, "At Budget")}</td><td>${cn(o, "Under Budget")}</td><td>${cn(o, "Budget Unavailable")}</td></tr>`).join(""))}
+    <p class="k">No per-worker share of an activity budget is configured, so a worker is not compared with an activity budget. Hours are each worker's own recorded hours; the status columns count the activities the worker took part in, using that activity's overall status.</p>
+    <h3 style="margin:12px 0 4px">By activity</h3>
+    ${tbl(["Activity", "Run", "Unit", "Budget", "Actual (all workers)", "Status", "Variance %"], rows.map(r => `<tr class="${r.cls}">${r.c.map((c, i) => `<td>${esc(c)}</td>`).join("")}</tr>`).join(""))}
+    <p class="k">Advisory only: it never blocks a worker or changes a task. Budget is each activity's own configured rate. Actual is every worker's recorded hours from the permanent log, counted once. The date range does not apply here. Use By worker, By activity and All sessions for the individual time logs.</p>`;
+  return {html, rows, head: ["Run", "Activity ID", "Activity", "Unit", "Budget (h)", "Actual (h)", "Variance (h)", "Variance %", "Status", "Sessions"], file: "labor-budget-vs-actual"};
 } catch (e) { return {err: "Budget Unavailable: the comparison could not be built."}; } }
 function labor() {
   const el = $("lab"); if (el.classList.contains("hidden") || !LAB) return;
@@ -465,7 +468,7 @@ async function loadLabor(runId) {
 function lbLine(a) { try {
   const run = SEL && SEL.runId, m = run && LBU[run]; if (!m) return "";
   const u = a.scope === "pre-sowing" ? m[run + "|" + a.id] : (WV ? m[run + "|" + a.id + "|" + WV.wave] : null); if (!u) return "";
-  const cls = u.status === "Over Budget" ? "bad" : u.status === "Within Budget" ? "ok" : "gry", p = u.variancePct;
+  const cls = u.status === "Over Budget" ? "bad" : (u.status === "At Budget" || u.status === "Under Budget") ? "ok" : "gry", p = u.variancePct;
   return `<div class="d k">Labor · ${u.scope === "pre-sowing" ? "whole run" : "wave " + u.wave}: ${u.budgetH == null ? "" : "Budget " + lbH(u.budgetH) + " · "}Actual ${lbH(u.actualH)}${u.varianceH == null ? "" : " · Variance " + lbS(u.varianceH) + (p == null ? "" : " (" + (p > 0 ? "+" : p < 0 ? "−" : "") + Math.abs(p) + "%)")} · <span class="badge ${cls}">${u.status}</span></div>`; } catch (e) { return ""; } }
 const portNote = a => portNote0(a) + lbLine(a);
 let WV = null;   // wave the open panel shows: activities are shared by the run, but each worker's portion is submitted and verified per wave
@@ -978,7 +981,6 @@ document.addEventListener("click", async e => {
   else if (d.cprint) window.print();
   else if (d.qall !== undefined) { QALL = d.qall === "1"; queue(); }
 });
-document.addEventListener("change", e => { try { if (e.target.id === "lbr") { LB.run = e.target.value; LB.wave = ""; labor(); } else if (e.target.id === "lbw") { LB.wave = e.target.value; labor(); } } catch (er) {} });
 document.addEventListener("change", e => { if (e.target.id === "lf" || e.target.id === "lt") { LB[e.target.id === "lf" ? "from" : "to"] = e.target.value || LB[e.target.id === "lf" ? "from" : "to"]; LB.show = ""; labor(); } });
 
 /* ---------- add activity (manager): the server assigns ID, group, timing, scope ---------- */
