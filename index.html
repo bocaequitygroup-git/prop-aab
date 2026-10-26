@@ -85,7 +85,7 @@ button.on{background:var(--acc);color:var(--bg);border:0}
 .cal .ev{display:block;width:100%;text-align:left;font-weight:400;font-size:11.5px;line-height:1.3;padding:2px 4px;margin-top:2px;min-height:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:0;border-left:4px solid var(--acc);background:var(--bg);color:var(--ink);border-radius:4px}
 .cal .ev.more{border-left-color:var(--line);color:var(--mute)}.cal>.sd{outline:2px solid var(--ink);outline-offset:-2px}
 .tf{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 12px;align-items:end;margin:8px 0}.tf label{display:grid;gap:2px}#login{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:16px}#login .card{width:min(360px,100%);display:grid;gap:10px;margin:0}#login label{display:grid;gap:2px}
-.tw{overflow-x:auto}.lt tr.sub td{color:var(--mute)}.lt tr.sub td:first-child{padding-left:28px}.lt tr.tot td{font-weight:700;border-top:2px solid var(--line)}.lt tr.grp td{font-weight:600}
+.tw{overflow-x:auto}.lt tr.sub td{color:var(--mute)}.lt tr.sub td:first-child{padding-left:28px}.lt tr.tot td{font-weight:700;border-top:2px solid var(--line)}.lt tr.grp td{font-weight:600}.lt tr.over td:last-child{color:var(--bad);font-weight:700}
 .ag{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}.ag .n{flex:1;min-width:220px}
 @media print{header,.leg,aside,#kpis,#tabs,#err,#toast,#room,#waves,#prof,#qp,#team,#lab,#cal .noprint{display:none!important}body{background:#fff}.lay{display:block;padding:0}#cal{border:0;display:block!important}}
 @media(prefers-reduced-motion:no-preference){.t{transition:transform .1s}.t:not(.e):hover{transform:scale(1.25)}}
@@ -354,31 +354,40 @@ function labPreset() {
   if (LB.show === "7") { LB.from = add(t, -6); LB.to = t; } else if (LB.show === "30") { LB.from = add(t, -29); LB.to = t; }
   else if (LB.show === "all") { LB.from = ds[0] || t; LB.to = ds.length && ds[ds.length - 1] > t ? ds[ds.length - 1] : t; }
 }
+let LBA = null;   // every production unit's budget comparison (advisory), keyed by unit
 async function loadLab() {
-  try { const r = await get({action:"log"});
-    LAB = r.entries.filter(x => !x.correctedBy).map(x => ({id: x.log_id, d: ldate(x.closed_at || x.started_at), at: x.closed_at || x.started_at, h: Number(x.labor_hours) || 0, crop: x.crop_code, wave: x.wave,
+  try { LBA = null; try { const q = await get({action:"laborBudget"}); LBA = {}; (q.units || []).forEach(u => { LBA[u.key] = u; }); } catch (e) { LBA = null; }
+    const r = await get({action:"log"});
+    LAB = r.entries.filter(x => !x.correctedBy).map(x => ({id: x.log_id, d: ldate(x.closed_at || x.started_at), at: x.closed_at || x.started_at, h: Number(x.labor_hours) || 0, crop: x.crop_code, wave: x.wave, run: x.run_id, aid: x.activity_id,
       act: String(x.activity_name || x.activity_id || "Unnamed activity").trim(), who: String(x.workers || "").split(/[;,]/).map(n => n.trim()).filter(Boolean)}));
     labPreset(); labor(); }
   catch (e) { LAB = null; $("lab").innerHTML = `<div class="row" style="margin-top:0"><h2 style="margin:0">Labor Hours</h2><span class="sp"></span><button type="button" class="alt" data-lclose="1">Close</button></div><div class="note">${esc(e.message)}</div>`; }
 }
 function labGroups(es, view) {   // a session with several workers splits its hours equally between them, so the grand total always equals the ledger total
   const top = new Map(), a = x => view === "worker" ? x.w : x.act, b = x => view === "worker" ? x.act : x.w;
-  es.forEach(e => (e.who.length ? e.who : [NOWK]).forEach(w => { const x = {w, act: e.act, h: e.h / Math.max(1, e.who.length), id: e.id}, k = a(x);
-    const g = top.get(k) || {key: k, ids: new Set(), h: 0, subs: new Map()}; top.set(k, g); g.ids.add(x.id); g.h += x.h;
+  es.forEach(e => (e.who.length ? e.who : [NOWK]).forEach(w => { const x = {w, act: e.act, h: e.h / Math.max(1, e.who.length), id: e.id}, k = a(x), uk = LBA && (LBA[e.run + "|" + e.aid] || LBA[e.run + "|" + e.aid + "|" + e.wave]);
+    const g = top.get(k) || {key: k, ids: new Set(), h: 0, subs: new Map(), units: new Set()}; top.set(k, g); g.ids.add(x.id); g.h += x.h; if (uk) g.units.add(uk.key);
     const sg = g.subs.get(b(x)) || {key: b(x), ids: new Set(), h: 0}; g.subs.set(b(x), sg); sg.ids.add(x.id); sg.h += x.h; }));
   const srt = (p, q) => q.h - p.h || q.ids.size - p.ids.size || String(p.key).localeCompare(q.key);
-  return [...top.values()].sort(srt).map(g => ({key: g.key, n: g.ids.size, h: g.h, subs: [...g.subs.values()].sort(srt).map(x => ({key: x.key, n: x.ids.size, h: x.h}))}));
+  return [...top.values()].sort(srt).map(g => ({key: g.key, n: g.ids.size, h: g.h, units: [...g.units], subs: [...g.subs.values()].sort(srt).map(x => ({key: x.key, n: x.ids.size, h: x.h}))}));
 }
 function labView() {
   const es = LAB.filter(x => x.d >= LB.from && x.d <= LB.to), tot = es.reduce((n, x) => n + x.h, 0);
   if (LB.view === "sessions") { const l = es.slice().sort((p, q) => String(q.at).localeCompare(String(p.at))); return {es, tot, head: ["Date", "Worker", "Activity", "Hours (h:mm)", "Hours (decimal)"], csv: ["Closed at", "Worker", "Activity", "Crop", "Wave", "Hours (h:mm)", "Hours (decimal)"],
     rows: l.map(x => ({c: [fmt(x.d), x.who.join(", ") || NOWK, x.act, hm(x.h), x.h.toFixed(2)], r: [x.at, x.who.join(", ") || NOWK, x.act, x.crop, x.wave, hm(x.h), x.h.toFixed(2)]})),
     total: ["Total", "", `${es.length} session${es.length === 1 ? "" : "s"}`, hm(tot), tot.toFixed(2)]}; }
-  const g = labGroups(es, LB.view), w = LB.view === "worker", rows = [];
-  g.forEach(x => { rows.push({cls: "grp", c: [x.key, x.n, hm(x.h), x.h.toFixed(2)], r: w ? [x.key, "", x.n, hm(x.h), x.h.toFixed(2)] : ["", x.key, x.n, hm(x.h), x.h.toFixed(2)]});
-    x.subs.forEach(y => rows.push({cls: "sub", c: [y.key, y.n, hm(y.h), y.h.toFixed(2)], r: w ? [x.key, y.key, y.n, hm(y.h), y.h.toFixed(2)] : [y.key, x.key, y.n, hm(y.h), y.h.toFixed(2)]})); });
-  return {es, tot, head: [w ? "Worker / activity" : "Activity / worker", "Sessions", "Hours (h:mm)", "Hours (decimal)"], csv: ["Worker", "Activity", "Sessions", "Hours (h:mm)", "Hours (decimal)"], rows, total: ["Total", es.length, hm(tot), tot.toFixed(2)]};
+  const g = labGroups(es, LB.view), w = LB.view === "worker", rows = [], z = ["", "", "", "", ""];   // activity view: five budget columns (advisory)
+  g.forEach(x => { const bd = w ? [] : labBud(x.units);
+    rows.push({cls: "grp" + (bd[4] === "Over Budget" ? " over" : ""), c: [x.key, x.n, hm(x.h), x.h.toFixed(2), ...bd], r: w ? [x.key, "", x.n, hm(x.h), x.h.toFixed(2)] : ["", x.key, x.n, hm(x.h), x.h.toFixed(2), ...bd]});
+    x.subs.forEach(y => rows.push({cls: "sub", c: [y.key, y.n, hm(y.h), y.h.toFixed(2), ...(w ? [] : z)], r: w ? [x.key, y.key, y.n, hm(y.h), y.h.toFixed(2)] : [y.key, x.key, y.n, hm(y.h), y.h.toFixed(2), ...z]})); });
+  const bh = ["Budget (h:mm)", "Actual, activity total (h:mm)", "Variance (h:mm)", "Variance %", "Status"];
+  return {es, tot, head: [w ? "Worker / activity" : "Activity / worker", "Sessions", "Hours (h:mm)", "Hours (decimal)", ...(w ? [] : bh)], csv: ["Worker", "Activity", "Sessions", "Hours (h:mm)", "Hours (decimal)", ...(w ? [] : bh)], rows, total: ["Total", es.length, hm(tot), tot.toFixed(2), ...(w ? [] : z)]};
 }
+const labBud = keys => { try {   // advisory only: budget vs the recorded hours of every production unit these sessions belong to (a unit counts once, in full)
+  let b = 0, a = 0, n = 0; (keys || []).forEach(k => { const u = LBA && LBA[k]; if (u && u.budgetH != null) { b += u.budgetH; a += u.actualH; n++; } });
+  if (!n) return ["—", "—", "—", "—", "Budget Unavailable"];
+  const v = a - b, sg = x => (x > 0.0004 ? "+" : x < -0.0004 ? "−" : "") + hm(Math.abs(x));
+  return [hm(b), hm(a), sg(v), b > 0 ? (v > 0 ? "+" : "") + (v / b * 100).toFixed(1) + "%" : "—", v > 0.0004 ? "Over Budget" : "Within Budget"]; } catch (e) { return ["—", "—", "—", "—", "Budget Unavailable"]; } };
 function labor() {
   const el = $("lab"); if (el.classList.contains("hidden") || !LAB) return;
   const btn = (a, v, cur, l) => `<button type="button" class="${cur === v ? "on" : "alt"}" data-${a}="${v}">${l}</button>`, bad = LB.from > LB.to, v = bad ? null : labView();
@@ -390,7 +399,7 @@ function labor() {
   ${v.rows.length ? `<div class="tw"><table class="lt"><tr>${v.head.map(h => `<th>${h}</th>`).join("")}</tr>${v.rows.map(r => `<tr class="${r.cls || ""}">${r.c.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}<tr class="tot">${v.total.map(c => `<td>${esc(c)}</td>`).join("")}</tr></table></div>` : `<p class="k">No closed sessions in this range.</p>`}`}`;
 }
 function labCsv() {
-  const v = labView(), q = x => '"' + String(x ?? "").replace(/"/g, '""') + '"', csv = [v.csv.map(q).join(","), ...v.rows.map(r => r.r.map(q).join(",")), (v.csv.length === 7 ? ["Total", "", "", "", "", hm(v.tot), v.tot.toFixed(2)] : ["Total", "", v.es.length, hm(v.tot), v.tot.toFixed(2)]).map(q).join(",")].join("\r\n");
+  const v = labView(), q = x => '"' + String(x ?? "").replace(/"/g, '""') + '"', csv = [v.csv.map(q).join(","), ...v.rows.map(r => r.r.map(q).join(",")), (v.csv.length === 7 ? ["Total", "", "", "", "", hm(v.tot), v.tot.toFixed(2)] : ["Total", "", v.es.length, hm(v.tot), v.tot.toFixed(2)].concat(new Array(Math.max(0, v.csv.length - 5)).fill(""))).map(q).join(",")].join("\r\n");
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], {type: "text/csv"})); a.download = `labor-hours-${LB.view}-${LB.from}-to-${LB.to}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 let TRAY = null, CELLS = [], CAP = 516;
@@ -411,6 +420,23 @@ function trayInfo() {
 }
 let RFILT = "all", RCF = "";   // room: status filter and crop filter
 const trackOf = r => { const s = String(r.propLocation || ""), i = s.lastIndexOf(" · "); return i >= 0 ? s.slice(i + 3) : (s || "Unassigned"); };
+
+/* ---------- Labor budget (advisory, display only) ----------
+   Compares the labor hours allowed for an activity with the human hours recorded in the permanent ledger, per production unit:
+   crop-wave activities per wave, pre-sowing activities once per run. A separate read (action "laborBudget"): if it fails, nothing is shown and nothing else is affected. */
+const LBU = {}, LBS = {};   // runId -> {unit key: unit}; runId -> last payload (re-draw only when it changed)
+const lbH = h => { const m = Math.round(Math.abs(h) * 60); return Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0"); };
+const lbS = h => (h > 0.0004 ? "+" : h < -0.0004 ? "−" : "") + lbH(h);
+async function loadLabor(runId) {
+  try { const r = await get({action:"laborBudget", runId}), m = {}; (r.units || []).forEach(u => { m[u.key] = u; });
+    const s = JSON.stringify(m); if (s !== LBS[runId]) { LBS[runId] = s; LBU[runId] = m; prof(); } } catch (e) {}
+}
+function lbLine(a) { try {
+  const run = SEL && SEL.runId, m = run && LBU[run]; if (!m) return "";
+  const u = a.scope === "pre-sowing" ? m[run + "|" + a.id] : (WV ? m[run + "|" + a.id + "|" + WV.wave] : null); if (!u) return "";
+  const cls = u.status === "Over Budget" ? "bad" : u.status === "Within Budget" ? "ok" : "gry", p = u.variancePct;
+  return `<div class="d k">Labor · ${u.scope === "pre-sowing" ? "whole run" : "wave " + u.wave}: ${u.budgetH == null ? "" : "Budget " + lbH(u.budgetH) + " · "}Actual ${lbH(u.actualH)}${u.varianceH == null ? "" : " · Variance " + lbS(u.varianceH) + (p == null ? "" : " (" + (p > 0 ? "+" : p < 0 ? "−" : "") + Math.abs(p) + "%)")} · <span class="badge ${cls}">${u.status}</span></div>`; } catch (e) { return ""; } }
+const portNote = a => portNote0(a) + lbLine(a);
 let WV = null;   // wave the open panel shows: activities are shared by the run, but each worker's portion is submitted and verified per wave
 function actKind(a, w) {   // {k: done | wait | prog | as | un, sub, tot}: done = every assigned worker's portion verified by the manager
   const S = a.sessions || [], P = a.portions || [], wv = w || WV, crop = a.scope === "crop-wave";
@@ -444,22 +470,19 @@ async function doReassignWorker(id, who) {   // hands ONE worker's seat on an ac
   const rs = await write("Reassigning " + who + " to " + to.name, () => post({action:"assign", runId:c.r.runId, activityIds:[id], workerIds:team.map(x => x.name === who ? String(to.id) : String(x.id)), note}));
   if (rs) { delete DRAFT[sk]; delete DRAFT[nk]; } done(rs, who + " → " + to.name + " on " + id);
 }
-function portNote(a) {   // each worker's own portion: working, submitted, verified
+function portNote0(a) {   // each worker's own portion: working, submitted, verified
   if (a.overridden) return "";
   const P = a.portions || [], crop = a.scope === "crop-wave", S = a.sessions || [];
   const lines = P.filter(p => !crop || !WV || p.wave === WV.wave).map(p => (crop ? "W" + p.wave + ": " : "") + p.workers.map(x => esc(x.name) + (x.verified ? " ✓ verified" : x.submitted ? " · submitted, awaiting verification" : S.some(s => s.by === x.name && (!crop || Number(s.wave) === p.wave)) ? " · working" : x.required ? " · not submitted" : "")).join("; "));
   return lines.length ? `<div class="d k">${lines.join("<br>")}</div>` : S.length ? `<div class="d k">Working now: ${S.map(s => esc(s.by) + (crop ? " W" + s.wave : "")).join(", ")}</div>` : "";
 }
 const awWave = r => r.waves.find(w => w.wave === r.acts.awaitWave) || r.waves[0];   // the wave that holds submitted, unverified work
-const budPortion = (a, min) => { try {   // advisory only: informational badge for the manager, never blocks or changes any work; any problem shows nothing
-  if (a.budgetH == null) return ""; const over = min > a.budgetH * 60;
-  return over ? ` · <span class="badge bad">Over budget by ${hm((min - a.budgetH * 60) / 60)}</span>` : ` · <span class="badge ok">Within budget (${hm(a.budgetH)})</span>`; } catch (e) { return ""; } };
 function portBox(a, r) {   // manager audit: verify each worker's submitted portion on its own
   const crop = a.scope === "crop-wave", P = (a.portions || []).filter(p => !crop || !WV || p.wave === WV.wave); if (!P.length) { const o = crop ? (a.portions || []).filter(p => p.workers.some(x => x.submitted && !x.verified)).map(p => p.wave) : []; return o.length ? `<div class="d"><span class="badge wait">! Submitted on ${o.length > 1 ? "waves" : "wave"} ${o.join(", ")}, not on the wave you have open</span> ${o.slice(0, 5).map(n => `<button type="button" class="alt sm" data-sel="${esc(r.runId)}|${n}">Open wave ${n}</button>`).join(" ")}</div>` : ""; }
   const q = x => x.qty !== "" && x.qty != null ? " · " + esc(x.qty) + " " + esc(x.unit) : "";
   return `<div class="d"><b>Worker portions</b> <span class="k">each must be verified before the phase can advance</span>${P.map(p => `${crop ? `<div class="k">Wave ${p.wave}${p.cleared ? " · all verified" : ""}</div>` : ""}${p.workers.map(x => {
     if (x.verified) return `<div class="k">✓ ${esc(x.name)}${q(x)} · verified by ${esc(x.verifiedBy)}${x.notes ? " · " + esc(x.notes) : ""}</div>`;
-    if (x.submitted) return `<div class="frm"><span class="k">${esc(x.name)} submitted ${x.at ? wt(x.at) : ""} · ${x.min} min${q(x)}${budPortion(a, x.min)}</span><input type="text" data-d="${dk("n", r.runId, x.logId)}" value="${dv(dk("n", r.runId, x.logId))}" placeholder="Audit notes (optional)" aria-label="Audit notes for ${esc(x.name)}"><button type="button" class="sm" data-a="vw" data-id="${esc(a.id)}" data-log="${esc(x.logId)}">Verify ${esc(x.name)}</button></div>`;
+    if (x.submitted) return `<div class="frm"><span class="k">${esc(x.name)} submitted ${x.at ? wt(x.at) : ""} · ${x.min} min${q(x)}</span><input type="text" data-d="${dk("n", r.runId, x.logId)}" value="${dv(dk("n", r.runId, x.logId))}" placeholder="Audit notes (optional)" aria-label="Audit notes for ${esc(x.name)}"><button type="button" class="sm" data-a="vw" data-id="${esc(a.id)}" data-log="${esc(x.logId)}">Verify ${esc(x.name)}</button></div>`;
     if (x.required && !x.submitted) { const team = a.assignees || [], multi = team.length > 1 && a.scope === "crop-wave", ids = team.map(t => String(t.id)), free = (B.workers || []).filter(w => !ids.includes(String(w.id)));
       const nk = dk("dn", r.runId, a.id, x.name), sk = dk("rt", r.runId, a.id, x.name);
       return `<div class="frm"><span class="k">○ ${esc(x.name)} · ${x.partial ? "partly done, not submitted" : "not submitted yet"}</span>`
@@ -850,7 +873,7 @@ function paneAct(d) {   // clicks on the wave pane's data-a buttons
   }
 }
 const LOADING = {}, QI = [];
-async function loadRun(id) { LOADING[id] = 1; try { RS[id] = await get({action:"run", runId:id}); } catch (e) { RS[id] = {activities: []}; toast(e.message, true); } delete LOADING[id]; prof(); }
+async function loadRun(id) { loadLabor(id); LOADING[id] = 1; try { RS[id] = await get({action:"run", runId:id}); } catch (e) { RS[id] = {activities: []}; toast(e.message, true); } delete LOADING[id]; prof(); }
 function queue() {
   const items = flat().map(({r, w}) => { const d = days(T, w.sow), [k] = stat(r, w, T);
     if (T >= w.plant) return null;
