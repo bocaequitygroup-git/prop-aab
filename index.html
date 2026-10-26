@@ -346,7 +346,7 @@ async function teamAct(body, b) {   // add / reset: the server returns the refre
 
 /* ---------- Labor Hours: closed work sessions from the permanent ledger (FIELD_ACTIVITY_LOG, via the read-only ?action=log feed). ---------- */
 let LAB = null, LB = {show: "7", from: "", to: "", view: "budget"};   // LAB = effective ledger entries; LB = date range, preset and view
-const LSH = {"7": "Last 7 days", "30": "Last 30 days", all: "All time"}, LVW = {budget: "Budget vs Actual", worker: "By worker", activity: "By activity", sessions: "All sessions"}, NOWK = "No worker recorded";
+const LSH = {"7": "Last 7 days", "30": "Last 30 days", all: "All time"}, LVW = {budget: "Budget vs Actual", worker: "By worker", sessions: "All sessions"}, NOWK = "No worker recorded";
 const ldate = s => { s = String(s || ""); if (s.length <= 10) return s; const d = new Date(s); return isNaN(d) ? s.slice(0, 10) : new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
 const hm = h => { const m = Math.round(h * 60); return Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0"); };
 function labPreset() {
@@ -376,20 +376,14 @@ function labView() {
   if (LB.view === "sessions") { const l = es.slice().sort((p, q) => String(q.at).localeCompare(String(p.at))); return {es, tot, head: ["Date", "Worker", "Activity", "Hours (h:mm)", "Hours (decimal)"], csv: ["Closed at", "Worker", "Activity", "Crop", "Wave", "Hours (h:mm)", "Hours (decimal)"],
     rows: l.map(x => ({c: [fmt(x.d), x.who.join(", ") || NOWK, x.act, hm(x.h), x.h.toFixed(2)], r: [x.at, x.who.join(", ") || NOWK, x.act, x.crop, x.wave, hm(x.h), x.h.toFixed(2)]})),
     total: ["Total", "", `${es.length} session${es.length === 1 ? "" : "s"}`, hm(tot), tot.toFixed(2)]}; }
-  const g = labGroups(es, LB.view), w = LB.view === "worker", rows = [], z = ["", "", "", "", ""];   // activity view: five budget columns (advisory)
-  g.forEach(x => { const bd = w ? [""] : labBud(x.units);   // by worker: one "Activity budget" column on each activity row; by activity: five budget columns (advisory)
-    rows.push({cls: "grp" + (bd[4] === "Over Budget" ? " over" : ""), c: [x.key, x.n, hm(x.h), x.h.toFixed(2), ...bd], r: w ? [x.key, "", x.n, hm(x.h), x.h.toFixed(2), ""] : ["", x.key, x.n, hm(x.h), x.h.toFixed(2), ...bd]});
-    x.subs.forEach(y => { const sb = w ? [labBudSum(y.units)] : z; rows.push({cls: "sub", c: [y.key, y.n, hm(y.h), y.h.toFixed(2), ...sb], r: w ? [x.key, y.key, y.n, hm(y.h), y.h.toFixed(2), ...sb] : [y.key, x.key, y.n, hm(y.h), y.h.toFixed(2), ...z]}); }); });
-  const bh = ["Budget (h:mm)", "Actual, activity total (h:mm)", "Variance (h:mm)", "Variance %", "Status"];
-  return {es, tot, head: [w ? "Worker / activity" : "Activity / worker", "Sessions", "Hours (h:mm)", "Hours (decimal)", ...(w ? ["Activity budget (h:mm)"] : bh)], csv: ["Worker", "Activity", "Sessions", "Hours (h:mm)", "Hours (decimal)", ...(w ? ["Activity budget (h:mm)"] : bh)], rows, total: ["Total", es.length, hm(tot), tot.toFixed(2), ...(w ? [""] : z)]};
+  const g = labGroups(es, "worker"), rows = [];   // by worker: each activity row carries the activity's budget (advisory)
+  g.forEach(x => {
+    rows.push({cls: "grp", c: [x.key, x.n, hm(x.h), x.h.toFixed(2), ""], r: [x.key, "", x.n, hm(x.h), x.h.toFixed(2), ""]});
+    x.subs.forEach(y => { const sb = labBudSum(y.units); rows.push({cls: "sub", c: [y.key, y.n, hm(y.h), y.h.toFixed(2), sb], r: [x.key, y.key, y.n, hm(y.h), y.h.toFixed(2), sb]}); }); });
+  return {es, tot, head: ["Worker / activity", "Sessions", "Hours (h:mm)", "Hours (decimal)", "Activity budget (h:mm)"], csv: ["Worker", "Activity", "Sessions", "Hours (h:mm)", "Hours (decimal)", "Activity budget (h:mm)"], rows, total: ["Total", es.length, hm(tot), tot.toFixed(2), ""]};
 }
 const labBudSum = keys => { try {   // the activity's own budget for the units these sessions belong to; a worker is not compared with it (no per-worker allocation is configured)
   let b = 0, n = 0; (keys || []).forEach(k => { const u = LBA && LBA[k]; if (u && u.budgetH != null) { b += u.budgetH; n++; } }); return n ? hm(b) : "Budget Unavailable"; } catch (e) { return "Budget Unavailable"; } };
-const labBud = keys => { try {   // advisory only: budget vs the recorded hours of every production unit these sessions belong to (a unit counts once, in full)
-  let b = 0, a = 0, n = 0, all = 0; (keys || []).forEach(k => { const u = LBA && LBA[k]; if (!u) return; all += u.actualH; if (u.budgetH != null) { b += u.budgetH; a += u.actualH; n++; } });
-  if (!n) return ["", all ? hm(all) : "", "", "", "Budget Unavailable"];
-  const v = Math.round(a * 100) / 100 - Math.round(b * 100) / 100, sg = x => (x > 0.004 ? "+" : x < -0.004 ? "−" : "") + hm(Math.abs(x));
-  return [hm(b), hm(a), sg(v), b > 0 ? (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v / b * 100).toFixed(1) + "%" : "", v > 0.004 ? "Over Budget" : v < -0.004 ? "Under Budget" : "At Budget"]; } catch (e) { return ["", "", "", "", "Budget Unavailable"]; } };
 /* ---------- Budget vs Actual (advisory): system-wide, by user, and a simple worker / activity table ----------
    System-wide: every production unit (a crop-wave activity on one wave, or a pre-sowing activity once per run) is compared ONCE: all workers' recorded hours against its budget.
    No per-worker allocation of an activity budget is configured, so a worker is never compared with an activity budget in full: the table shows each worker's own actual hours next to
